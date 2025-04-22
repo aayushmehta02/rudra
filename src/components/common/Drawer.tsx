@@ -1,5 +1,7 @@
+import { Group as AdminsIcon, Assignment as AuditIcon, Payment as BillingIcon, Business as BusinessIcon, Dashboard as DashboardIcon, Security as FirewallIcon, DirectionsBoat as FleetIcon, Wifi as HotspotIcon, Router as RouterIcon } from '@mui/icons-material';
 import MailIcon from '@mui/icons-material/Mail';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
+import { Typography } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -47,6 +49,17 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
   }),
 );
+const navItems = [
+  { text: 'Dashboard', icon: <DashboardIcon />, selected: true },
+  { text: 'Tenants', icon: <BusinessIcon /> },
+  { text: 'Fleets', icon: <FleetIcon /> },
+  { text: 'Routers', icon: <RouterIcon /> },
+  { text: 'Firewall Templates', icon: <FirewallIcon /> },
+  { text: 'Hotspot Users', icon: <HotspotIcon /> },
+  { text: 'Audit Trail', icon: <AuditIcon /> },
+  { text: 'Billing', icon: <BillingIcon /> },
+  { text: 'Admins', icon: <AdminsIcon /> }
+];
 
 export default function DrawerComponent() {
   const [open, setOpen] = React.useState(false);
@@ -72,9 +85,13 @@ export default function DrawerComponent() {
         },
       }}
     >
+      <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+            <Typography component="span" sx={{ color: 'white', fontWeight: 'bold' }}>future</Typography>
+            <Typography component="span" sx={{ color: '#4299e1', fontWeight: 'bold' }}>konnect</Typography>
+          </Typography>
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem key={text} disablePadding sx={{ display: 'block' }}>
+        {navItems.map((item, index) => (
+          <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -89,10 +106,10 @@ export default function DrawerComponent() {
                   justifyContent: 'center',
                 }}
               >
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {item.icon}
               </ListItemIcon>
               <ListItemText 
-                primary={text} 
+                primary={item.text} 
                 sx={{ opacity: open ? 1 : 0 }}
               />
             </ListItemButton>
