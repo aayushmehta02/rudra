@@ -2,8 +2,14 @@
 
 import { SIGNUP_USER } from '@/graphql/auth';
 import { useMutation } from '@apollo/client';
+import {
+    Box,
+    Button,
+    Paper,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { useState } from 'react';
-import styles from './Auth.module.css';
 
 export default function SignupForm() {
   const [username, setUsername] = useState('');
@@ -11,14 +17,13 @@ export default function SignupForm() {
   const [password, setPassword] = useState('');
   const [customError, setCustomError] = useState('');
 
-  const [signupUser, { data, loading, error }] = useMutation(SIGNUP_USER);
+  const [signupUser, { loading, error }] = useMutation(SIGNUP_USER);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCustomError('');
 
     try {
-      console.log('Signing up with:', { username, email, password });
       const res = await signupUser({
         variables: {
           username,
@@ -26,12 +31,9 @@ export default function SignupForm() {
           password,
         },
       });
-      console.log('Signup response:', res);
       const user = res.data?.insert_users?.returning?.[0];
-      console.log('User:', user);
       if (user) {
         localStorage.setItem('user', JSON.stringify(user));
-        console.log('User signed up:', user);
         // Optionally: redirect user to login/dashboard
       }
     } catch (err) {
@@ -41,50 +43,110 @@ export default function SignupForm() {
   };
 
   return (
-    <div className={styles.authContainer}>
-      <h2>Sign Up</h2>
-      {(customError || error) && (
-            <div className={styles.error}>{customError || error?.message}</div>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100vw',
+        overflow: 'hidden',
+      }}
+    >
+      <Paper
+        elevation={8}
+        sx={{
+          background: 'linear-gradient(145deg, #0f1115, #14161a)',
+          padding: 4,
+          width: '100%',
+          maxWidth: 500,
+          borderRadius: 3,
+        }}
+      >
+        <Typography
+          variant="h5"
+          align="center"
+          gutterBottom
+          sx={{ fontWeight: 'bold', color: '#fff' }}
+        >
+          future<span style={{ color: '#0ab4ff' }}>konnect</span>
+        </Typography>
+
+        {(customError || error) && (
+          <Typography color="error" align="center" sx={{ mb: 2 }}>
+            {customError || error?.message}
+          </Typography>
         )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label htmlFor="username">Username</label>
-          <input
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Username"
             type="text"
-            id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            margin="normal"
+            variant="filled"
             required
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+            }}
+            InputLabelProps={{
+              style: { color: '#aaa' },
+            }}
           />
-        </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="email">Email</label>
-          <input
+          <TextField
+            fullWidth
+            label="Email"
             type="email"
-            id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            margin="normal"
+            variant="filled"
             required
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+            }}
+            InputLabelProps={{
+              style: { color: '#aaa' },
+            }}
           />
-        </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="password">Password</label>
-          <input
+          <TextField
+            fullWidth
+            label="Password"
             type="password"
-            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            margin="normal"
+            variant="filled"
             required
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+            }}
+            InputLabelProps={{
+              style: { color: '#aaa' },
+            }}
           />
-        </div>
 
-        <button type="submit" disabled={loading} className={styles.submitButton}>
-          {loading ? 'Signing up...' : 'Sign Up'}
-        </button>
-      </form>
-    </div>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={loading}
+            sx={{
+              mt: 3,
+              py: 1.5,
+              bgcolor: '#0ab4ff',
+              color: '#fff',
+              fontWeight: 'bold',
+              '&:hover': { bgcolor: '#0899db' },
+            }}
+          >
+            {loading ? 'Signing up...' : 'SIGN UP'}
+          </Button>
+        </form>
+      </Paper>
+    </Box>
   );
 }
