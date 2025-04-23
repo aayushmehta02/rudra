@@ -1,6 +1,7 @@
 'use client';
 
 import { UPDATE_PASSWORD } from '@/graphql/auth';
+import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useMutation } from '@apollo/client';
 import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import bcrypt from 'bcryptjs';
@@ -18,6 +19,7 @@ interface DecodedToken {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const { showSnackbar } = useSnackbar();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     password: '',
@@ -39,7 +41,6 @@ export default function ResetPasswordPage() {
       }
 
       try {
-        // Verify token through API endpoint
         const response = await fetch('/api/verify-token', {
           method: 'POST',
           headers: {
@@ -59,7 +60,6 @@ export default function ResetPasswordPage() {
           setTokenValid(false);
         }
       } catch (err) {
-        console.error('Token verification error:', err);
         setError('An error occurred while verifying the reset link');
         setTokenValid(false);
       }
@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value.trim()
     }));
     setError(''); // Clear error when user types
   };
@@ -97,10 +97,10 @@ export default function ResetPasswordPage() {
     setError('');
 
     try {
-      // Hash the new password
+     
       const hashedPassword = await bcrypt.hash(formData.password, SALT_ROUNDS);
 
-      // Update password in database
+      
       const { data } = await updatePassword({
         variables: {
           userId: decodedToken.userId,
@@ -109,8 +109,8 @@ export default function ResetPasswordPage() {
       });
 
       if (data?.update_Users_by_pk?.id) {
-        // Success - redirect to login
-        router.push('/?message=Password+reset+successful');
+        showSnackbar('Password reset successful', 'success');
+        router.push('/');
       } else {
         setError('Failed to update password. Please try again.');
       }

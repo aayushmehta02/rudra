@@ -1,6 +1,7 @@
 'use client';
 
 import { SIGNUP_USER } from '@/graphql/auth';
+import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useMutation } from '@apollo/client';
 import {
   Box,
@@ -24,6 +25,7 @@ export default function SignupForm() {
     confirmPassword: ''
   });
   const [customError, setCustomError] = useState('');
+  const { showSnackbar } = useSnackbar();
 
   const [signupUser, { loading }] = useMutation(SIGNUP_USER, {
     fetchPolicy: 'no-cache'
@@ -56,7 +58,8 @@ export default function SignupForm() {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setCustomError('Please enter a valid email address');
+      
+      showSnackbar('Please enter a valid email address', 'error');
       return false;
     }
 
@@ -67,7 +70,10 @@ export default function SignupForm() {
     e.preventDefault();
     setCustomError('');
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      showSnackbar('Please fill in all fields', 'error');
+      return;
+    }
 
     try {
       // Hash password
@@ -92,9 +98,11 @@ export default function SignupForm() {
         };
         localStorage.setItem('user', JSON.stringify(userToStore));
         localStorage.setItem('token', user.id);
+        showSnackbar('Signup successful. Redirecting to home...', 'success');
         router.push('/home');
       } else {
         setCustomError('Signup failed. Please try again.');
+        showSnackbar('Signup failed. Please try again.');
       }
     } catch (err: any) {
       console.error('Signup error:', err);

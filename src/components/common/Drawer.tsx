@@ -1,3 +1,4 @@
+import { useSnackbar } from '@/providers/SnackbarProvider';
 import { Group as AdminsIcon, Assignment as AuditIcon, Payment as BillingIcon, Business as BusinessIcon, Dashboard as DashboardIcon, Security as FirewallIcon, DirectionsBoat as FleetIcon, Wifi as HotspotIcon, Logout as LogoutIcon, Router as RouterIcon } from '@mui/icons-material';
 import MailIcon from '@mui/icons-material/Mail';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
@@ -101,7 +102,7 @@ export default function DrawerComponent() {
   const handleMouseLeave = () => setOpen(false);
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+  const { showSnackbar } = useSnackbar();
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
@@ -110,6 +111,7 @@ export default function DrawerComponent() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    showSnackbar('Logged out successfully', 'success');
     router.push('/');
   };
 

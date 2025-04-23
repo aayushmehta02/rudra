@@ -1,14 +1,14 @@
 'use client';
 
 import { REQUEST_PASSWORD_RESET } from '@/graphql/auth';
+import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useLazyQuery } from '@apollo/client';
 import emailjs from '@emailjs/browser';
 import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useState } from 'react';
-
 // Initialize EmailJS with your public key
-emailjs.init(process.env.EMAILJS_PUBLIC_KEY || ''); // Replace with your actual public key
+emailjs.init("HE590tv6aI7jkUCn6"); // Replace with your actual public key
 
 export default function ForgotPasswordPage() {
   const [formData, setFormData] = useState({
@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   const [loading, setLoading] = useState(false);
-
+  const { showSnackbar } = useSnackbar();
   const [checkUser] = useLazyQuery(REQUEST_PASSWORD_RESET, {
     fetchPolicy: 'no-cache'
   });
@@ -46,8 +46,7 @@ export default function ForgotPasswordPage() {
       });
 
       if (!data?.Users || data.Users.length === 0) {
-        setMessageType('error');
-        setMessage('No account found with these credentials');
+        showSnackbar('No account found with these credentials', 'error');
         setLoading(false);
         return;
       }
@@ -72,28 +71,25 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         // Send email using EmailJS
         await emailjs.send(
-          process.env.EMAILJS_SERVICE_ID || '',
-          process.env.EMAILJS_TEMPLATE_ID || '',
+        'service_gn1rjo8',
+          'template_hbapyxs',
           {
             link: result.data?.resetUrl || '',
             email: user.email,
             to_name: user.username,
             from_name: "FutureKonnect"
           },
-          process.env.EMAILJS_PUBLIC_KEY || ''
+          "HE590tv6aI7jkUCn6"
         );
 
-        setMessageType('success');
-        setMessage('Password reset link has been sent to your email');
+        showSnackbar('Password reset link has been sent to your email', 'success');
         setFormData({ email: '', username: '' }); // Clear form
       } else {
-        setMessageType('error');
-        setMessage(result.message || 'Failed to generate reset token');
+        showSnackbar(result.message || 'Failed to generate reset token', 'error');
       }
     } catch (err) {
       console.error('Password reset error:', err);
-      setMessageType('error');
-      setMessage('Something went wrong. Please try again.');
+      showSnackbar('Something went wrong. Please try again.', 'error');
     } finally {
       setLoading(false);
     }

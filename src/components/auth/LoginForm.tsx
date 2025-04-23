@@ -1,6 +1,7 @@
 'use client';
 
 import { LOGIN_USER } from '@/graphql/auth';
+import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useLazyQuery } from '@apollo/client';
 import {
   Box,
@@ -19,7 +20,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
+  const { showSnackbar } = useSnackbar();
   const [loginUser, { loading }] = useLazyQuery(LOGIN_USER, {
     fetchPolicy: 'no-cache'
   });
@@ -29,7 +30,8 @@ export default function LoginForm() {
     setError('');
     
     if (!email || !password) {
-      setError('Please fill in all fields');
+      
+      showSnackbar('Please fill in all fields', 'error');
       return;
     }
 
@@ -39,7 +41,7 @@ export default function LoginForm() {
       });
 
       if (!data?.Users || data.Users.length === 0) {
-        setError('Invalid email or password');
+        showSnackbar('Invalid email or password', 'error');
         return;
       }
 
@@ -50,7 +52,7 @@ export default function LoginForm() {
         const isValidPassword = await bcrypt.compare(password, user.password);
         
         if (!isValidPassword) {
-          setError('Invalid email or password');
+          showSnackbar('Invalid email or password', 'error');
           return;
         }
 
@@ -63,16 +65,16 @@ export default function LoginForm() {
         
         localStorage.setItem('user', JSON.stringify(userToStore));
         localStorage.setItem('token', user.id);
-
+        showSnackbar('Login successful. Redirecting to home...', 'success');
         
         router.push('/home');
       } catch (bcryptError) {
         console.error('Password verification error:', bcryptError);
-        setError('Login failed. Please try again.');
+        showSnackbar('Login failed. Please try again.', 'error');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Login failed. Please try again.');
+      showSnackbar('Login failed. Please try again.', 'error');
     }
   };
 

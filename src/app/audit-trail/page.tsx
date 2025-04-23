@@ -4,6 +4,9 @@
 import Filters from '@/components/audit/Filters';
 import AppBarComponent from '@/components/common/AppBar';
 import DrawerComponent from '@/components/common/Drawer';
+import { GET_AUDIT_LOGS } from '@/graphql/getData';
+import { useSnackbar } from '@/providers/SnackbarProvider';
+import { useQuery } from '@apollo/client';
 import {
     FileDownload as DownloadIcon,
     ExpandMore as ExpandIcon,
@@ -15,6 +18,7 @@ import {
 import {
     Box,
     Button,
+    CircularProgress,
     IconButton,
     Paper,
     Table,
@@ -33,12 +37,12 @@ import React, { useMemo, useState } from 'react';
 
 // Types
 interface AuditLog {
-  id: number;
+  id: string;
   time: string;
-  description: React.ReactNode;
+  description: string;
   event: 'Create' | 'Delete' | 'Update' | 'Download';
   category: string;
-  performedBy: string;
+  performed_by: string;
 }
 
 interface TablePaginationActionsProps {
@@ -55,74 +59,6 @@ const EVENT_COLORS = {
   Update: '#3182ce',
   Download: '#6b46c1'
 } as const;
-
-// Sample Data
-const auditLogs: AuditLog[] = [
-  {
-    id: 1,
-    time: '11/02/24, 02:33 PM',
-    description: <>Admin user <strong>Roshani Agarwal</strong> with the role <strong>Tenant Admin</strong> was created</>,
-    event: 'Create',
-    category: 'Admin',
-    performedBy: 'Fletcher Fernandes'
-  },
-  {
-    id: 2,
-    time: '11/02/24, 01:52 PM',
-    description: <>A firewall rule allowing traffic from IP addresses to be accepted was created.</>,
-    event: 'Create',
-    category: 'Firewall Rule',
-    performedBy: 'Sachin Gowda'
-  },
-  {
-    id: 3,
-    time: '11/02/24, 01:23 PM',
-    description: <>Certificate downloaded for router <strong>Tranquil Sea</strong></>,
-    event: 'Download',
-    category: 'Router Certificate',
-    performedBy: 'Mukesh Sai Kumar'
-  },
-  {
-    id: 4,
-    time: '11/02/24, 01:11 PM',
-    description: <>Hotspot user <strong>JohnDoe</strong> was deleted from router <strong>Minstrim</strong> [HC00R3QN5NR]</>,
-    event: 'Delete',
-    category: 'Hotspot User',
-    performedBy: 'Vishal Dubey'
-  },
-  {
-    id: 5,
-    time: '11/02/24, 01:01 PM',
-    description: <>Firewall template <strong>Duolog</strong> was deleted</>,
-    event: 'Delete',
-    category: 'Firewall Template',
-    performedBy: 'Vishal Dubey'
-  },
-  {
-    id: 6,
-    time: '11/02/24, 12:58 PM',
-    description: <>New router <strong>RUDRA23</strong> [FF044QN5NF] was created</>,
-    event: 'Update',
-    category: 'Router',
-    performedBy: 'Karan Sajnani'
-  },
-  {
-    id: 7,
-    time: '11/02/24, 12:58 PM',
-    description: <>New router <strong>RUDRA23</strong> [FF044QN5NF] was created</>,
-    event: 'Create',
-    category: 'Router',
-    performedBy: 'Karan Sajnani'
-  },
-  {
-    id: 8,
-    time: '11/02/24, 12:58 PM',
-    description: <>New router <strong>RUDRA23</strong> [FF044QN5NF] was created</>,
-    event: 'Create',
-    category: 'Router',
-    performedBy: 'Karan Sajnani'
-  }
-];
 
 // Components
 const TablePaginationActions: React.FC<TablePaginationActionsProps> = ({
@@ -179,44 +115,21 @@ const TablePaginationActions: React.FC<TablePaginationActionsProps> = ({
 
 // CSV Export Function
 const exportToCSV = (logs: AuditLog[]) => {
-  // Convert React nodes to plain text for description
-  const processDescription = (desc: React.ReactNode): string => {
-    if (typeof desc === 'string') return desc;
-    if (!desc || typeof desc !== 'object') return '';
-
-    // Handle array of nodes
-    if (Array.isArray(desc)) {
-      return desc.map(node => processDescription(node)).join('');
-    }
-
-    // Handle React element
-    const element = desc as React.ReactElement<{ children?: React.ReactNode }>;
-    if (element.props?.children) {
-      if (Array.isArray(element.props.children)) {
-        return element.props.children.map(processDescription).join('');
-      }
-      return processDescription(element.props.children);
-    }
-
-    return '';
-  };
-
   // Prepare CSV data
   const headers = ['Time', 'Description', 'Event', 'Category', 'Performed By'];
   
   const csvData = logs.map(log => {
-    const description = processDescription(log.description).replace(/"/g, '""');
     return [
       log.time,
-      description,
+      log.description,
       log.event,
       log.category,
-      log.performedBy
+      log.performed_by
     ].map(value => `"${value}"`).join(',');
   });
 
   // Create CSV content with proper line breaks
-  const csvContent = [headers.join(','), ...csvData].join('\\n');
+  const csvContent = [headers.join(','), ...csvData].join('\n');
 
   // Create and trigger download
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -237,6 +150,12 @@ export default function AuditTrail() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'));
+  const { showSnackbar } = useSnackbar();
+
+  // Fetch audit logs
+  const { data: auditData, loading, error } = useQuery(GET_AUDIT_LOGS, {
+    fetchPolicy: 'cache-and-network'
+  });
 
   // States
   const [filters, setFilters] = useState({
@@ -252,7 +171,7 @@ export default function AuditTrail() {
     rowsPerPage: 10
   });
 
-  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Handlers
   const handleActionChange = (action: string) => {
@@ -273,6 +192,7 @@ export default function AuditTrail() {
       toDate: null
     });
     setPagination(prev => ({ ...prev, page: 0 }));
+    showSnackbar('Filters cleared successfully', 'success');
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -286,7 +206,7 @@ export default function AuditTrail() {
     });
   };
 
-  const toggleRowExpansion = (id: number) => {
+  const toggleRowExpansion = (id: string) => {
     setExpandedRows(prev => ({
       ...prev,
       [id]: !prev[id]
@@ -295,25 +215,42 @@ export default function AuditTrail() {
 
   // Filtered and paginated data
   const filteredLogs = useMemo(() => {
-    return auditLogs.filter(log => {
+    if (!auditData?.audit_logs) return [];
+
+    return auditData.audit_logs.filter((log: AuditLog) => {
       if (filters.category && log.category !== filters.category) return false;
       if (filters.actions.length > 0 && !filters.actions.includes(log.event)) return false;
-      if (filters.user && !log.performedBy.toLowerCase().includes(filters.user.toLowerCase())) return false;
+      if (filters.user && !log.performed_by.toLowerCase().includes(filters.user.toLowerCase())) return false;
       
       if (filters.fromDate || filters.toDate) {
-        const logDate = dayjs(log.time, 'DD/MM/YY, hh:mm A');
+        const logDate = dayjs(log.time);
         if (filters.fromDate && logDate.isBefore(filters.fromDate, 'day')) return false;
         if (filters.toDate && logDate.isAfter(filters.toDate, 'day')) return false;
       }
 
       return true;
     });
-  }, [filters]);
+  }, [auditData?.audit_logs, filters]);
 
   const paginatedLogs = filteredLogs.slice(
     pagination.page * pagination.rowsPerPage,
     pagination.page * pagination.rowsPerPage + pagination.rowsPerPage
   );
+
+  if (error) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '100vh',
+        bgcolor: '#0d1421',
+        color: 'white'
+      }}>
+        <Typography>Error loading audit logs. Please try again later.</Typography>
+      </Box>
+    );
+  }
 
   // Render
   return (
@@ -390,6 +327,7 @@ export default function AuditTrail() {
                 variant="outlined"
                 startIcon={<DownloadIcon />}
                 onClick={() => exportToCSV(filteredLogs)}
+                disabled={loading || filteredLogs.length === 0}
                 sx={{
                   color: 'white',
                   borderColor: 'rgba(255,255,255,0.3)',
@@ -461,122 +399,136 @@ export default function AuditTrail() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedLogs.map((log) => (
-                      <React.Fragment key={log.id}>
-                        <TableRow
-                          sx={{ 
-                            '&:nth-of-type(odd)': { backgroundColor: '#183b65' },
-                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
-                          }}
-                        >
-                          <TableCell sx={{ 
-                            borderBottom: '1px solid rgba(255,255,255,0.1)', 
-                            padding: { xs: 1, sm: 2 }
-                          }}>
-                            <IconButton 
-                              size="small" 
-                              onClick={() => toggleRowExpansion(log.id)}
-                              sx={{ color: 'white' }}
-                            >
-                              <ExpandIcon
-                                sx={{
-                                  transform: expandedRows[log.id] ? 'rotate(180deg)' : 'rotate(0)',
-                                  transition: 'transform 0.3s'
-                                }}
-                              />
-                            </IconButton>
-                          </TableCell>
-                          {!isMobile && (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                          <CircularProgress size={40} sx={{ color: 'white' }} />
+                        </TableCell>
+                      </TableRow>
+                    ) : paginatedLogs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'white' }}>
+                          No audit logs found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paginatedLogs.map((log: AuditLog) => (
+                        <React.Fragment key={log.id}>
+                          <TableRow
+                            sx={{ 
+                              '&:nth-of-type(odd)': { backgroundColor: '#183b65' },
+                              '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
+                            }}
+                          >
+                            <TableCell sx={{ 
+                              borderBottom: '1px solid rgba(255,255,255,0.1)', 
+                              padding: { xs: 1, sm: 2 }
+                            }}>
+                              <IconButton 
+                                size="small" 
+                                onClick={() => toggleRowExpansion(log.id)}
+                                sx={{ color: 'white' }}
+                              >
+                                <ExpandIcon
+                                  sx={{
+                                    transform: expandedRows[log.id] ? 'rotate(180deg)' : 'rotate(0)',
+                                    transition: 'transform 0.3s'
+                                  }}
+                                />
+                              </IconButton>
+                            </TableCell>
+                            {!isMobile && (
+                              <TableCell sx={{ 
+                                color: 'white', 
+                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                padding: { xs: 1, sm: 2 }
+                              }}>{dayjs(log.time).format('DD/MM/YY, hh:mm A')}</TableCell>
+                            )}
                             <TableCell sx={{ 
                               color: 'white', 
                               borderBottom: '1px solid rgba(255,255,255,0.1)',
-                              padding: { xs: 1, sm: 2 }
-                            }}>{log.time}</TableCell>
-                          )}
-                          <TableCell sx={{ 
-                            color: 'white', 
-                            borderBottom: '1px solid rgba(255,255,255,0.1)',
-                            padding: { xs: 1, sm: 2 },
-                            wordBreak: 'break-word'
-                          }}>{log.description}</TableCell>
-                          <TableCell sx={{ 
-                            color: 'white', 
-                            borderBottom: '1px solid rgba(255,255,255,0.1)',
-                            padding: { xs: 1, sm: 2 },
-                            '& span': {
-                              bgcolor: EVENT_COLORS[log.event],
-                              px: { xs: 1, sm: 2 },
-                              py: 0.5,
-                              borderRadius: '4px',
-                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                              fontWeight: 'bold',
-                              textTransform: 'uppercase',
-                              whiteSpace: 'nowrap',
-                              display: 'inline-block'
-                            }
-                          }}>
-                            <span>{log.event}</span>
-                          </TableCell>
-                          {!isMobile && (
-                            <>
-                              <TableCell sx={{ 
-                                color: 'white', 
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                padding: { xs: 1, sm: 2 }
-                              }}>{log.category}</TableCell>
-                              <TableCell sx={{ 
-                                color: 'white', 
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                padding: { xs: 1, sm: 2 }
-                              }}>{log.performedBy}</TableCell>
-                            </>
-                          )}
-                        </TableRow>
-                        {/* Mobile Expanded Row */}
-                        {isMobile && expandedRows[log.id] && (
-                          <TableRow
-                            sx={{ 
-                              backgroundColor: '#183b65',
-                            }}
-                          >
-                            <TableCell 
-                              colSpan={4}
+                              padding: { xs: 1, sm: 2 },
+                              wordBreak: 'break-word'
+                            }}>{log.description}</TableCell>
+                            <TableCell sx={{ 
+                              color: 'white', 
+                              borderBottom: '1px solid rgba(255,255,255,0.1)',
+                              padding: { xs: 1, sm: 2 },
+                              '& span': {
+                                bgcolor: EVENT_COLORS[log.event],
+                                px: { xs: 1, sm: 2 },
+                                py: 0.5,
+                                borderRadius: '4px',
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                                whiteSpace: 'nowrap',
+                                display: 'inline-block'
+                              }
+                            }}>
+                              <span>{log.event}</span>
+                            </TableCell>
+                            {!isMobile && (
+                              <>
+                                <TableCell sx={{ 
+                                  color: 'white', 
+                                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                  padding: { xs: 1, sm: 2 }
+                                }}>{log.category}</TableCell>
+                                <TableCell sx={{ 
+                                  color: 'white', 
+                                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                  padding: { xs: 1, sm: 2 }
+                                }}>{log.performed_by}</TableCell>
+                              </>
+                            )}
+                          </TableRow>
+                          {/* Mobile Expanded Row */}
+                          {isMobile && expandedRows[log.id] && (
+                            <TableRow
                               sx={{ 
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                padding: 2
+                                backgroundColor: '#183b65',
                               }}
                             >
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                <Box>
-                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
-                                    Time
-                                  </Typography>
-                                  <Typography color="white">
-                                    {log.time}
-                                  </Typography>
+                              <TableCell 
+                                colSpan={4}
+                                sx={{ 
+                                  borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                  padding: 2
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                  <Box>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                      Time
+                                    </Typography>
+                                    <Typography color="white">
+                                      {dayjs(log.time).format('DD/MM/YY, hh:mm A')}
+                                    </Typography>
+                                  </Box>
+                                  <Box>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                      Category
+                                    </Typography>
+                                    <Typography color="white">
+                                      {log.category}
+                                    </Typography>
+                                  </Box>
+                                  <Box>
+                                    <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                      Performed By
+                                    </Typography>
+                                    <Typography color="white">
+                                      {log.performed_by}
+                                    </Typography>
+                                  </Box>
                                 </Box>
-                                <Box>
-                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
-                                    Category
-                                  </Typography>
-                                  <Typography color="white">
-                                    {log.category}
-                                  </Typography>
-                                </Box>
-                                <Box>
-                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
-                                    Performed By
-                                  </Typography>
-                                  <Typography color="white">
-                                    {log.performedBy}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    ))}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
