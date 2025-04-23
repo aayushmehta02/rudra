@@ -1,21 +1,21 @@
-"use client"
+'use client';
+
 import { AccountCircle } from '@mui/icons-material';
-import { AppBar, IconButton, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
 
 export default function AppBarComponent() {
-    return(
-        <AppBar position="fixed">
-        <Toolbar>
-          
-          <Typography color="white" sx={{ mr: 1 }}>John doe</Typography>
-          <IconButton
-            size="large"
-            edge="end"
-            color="inherit"
-          >
+  return (
+    <AppBar position="fixed">
+      <Toolbar>
+        <Box sx={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Typography color="white" sx={{ mr: 1 }}>
+            John Doe
+          </Typography>
+          <IconButton size="large" edge="end" color="inherit">
             <AccountCircle sx={{ color: '#f56565' }} />
           </IconButton>
-        </Toolbar>
-      </AppBar>
-    )
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
 }

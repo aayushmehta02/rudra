@@ -3,13 +3,13 @@
 import { LOGIN_USER } from '@/graphql/auth';
 import { useLazyQuery } from '@apollo/client';
 import {
-    Box,
-    Button,
-    Link,
-    Paper,
-    TextField,
-    Typography,
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material';
+import Link from 'next/link';
 import { useState } from 'react';
 
 export default function LoginForm() {
@@ -118,7 +118,14 @@ export default function LoginForm() {
           />
 
           <Box textAlign="right" mt={1}>
-            <Link href="/forgot-password" underline="hover" sx={{ color: '#0ab4ff' }}>
+            <Link 
+              href="/forgot-password" 
+              style={{ 
+                color: '#0ab4ff', 
+                textDecoration: 'none'
+              }}
+              className="hover:underline"
+            >
               Forgot Password?
             </Link>
           </Box>

@@ -3,18 +3,15 @@
 
 import AppBarComponent from '@/components/common/AppBar';
 import DrawerComponent from '@/components/common/Drawer';
+import { StatCard } from '@/components/common/StatCard';
 import {
-  ChevronRight,
   Search as SearchIcon
 } from '@mui/icons-material';
 import {
   alpha,
   Box,
-  CssBaseline,
-  IconButton,
   InputBase,
   MenuItem,
-  AppBar as MuiAppBar,
   Paper,
   Select,
   styled,
@@ -27,49 +24,11 @@ import {
   Typography,
   useTheme
 } from '@mui/material';
+import { LineChart } from '@mui/x-charts/LineChart';
 import { useState } from 'react';
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from 'recharts';
-// Define styled components
-const drawerWidth = 210;
 
-const AppBar = styled(MuiAppBar)(({ theme }) => ({
-  backgroundColor: '#0d1421',
-  boxShadow: 'none',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-  zIndex: theme.zIndex.drawer + 1,
-}));
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: '#2a4465',
-  color: 'white',
-  borderRadius: theme.spacing(1),
-  padding: theme.spacing(2),
-  display: 'flex',
-  alignItems: 'center',
-  position: 'relative',
-  overflow: 'hidden',
-}));
 
-const StyledButton = styled(IconButton)(({ theme }) => ({
-  backgroundColor: '#2a4465',
-  color: 'white',
-  '&:hover': {
-    backgroundColor: '#3a5475',
-  },
-  marginTop: theme.spacing(2),
-  width: '80%',
-  borderRadius: theme.spacing(1),
-  padding: theme.spacing(1),
-  justifyContent: 'flex-start',
-}));
 
 const SearchBox = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -116,16 +75,28 @@ interface Tenant {
   dataUsage: string;
 }
 
-// Mock data
-const chartData: DataPoint[] = [
-  { date: '05 Mar', value: 800 },
-  { date: '06 Mar', value: 900 },
-  { date: '07 Mar', value: 1000 },
-  { date: '08 Mar', value: 1100 },
-  { date: '09 Mar', value: 1050 },
-  { date: '10 Mar', value: 900 },
-  { date: '11 Mar', value: 600 }
-];
+// Mock data for different time periods
+const generateChartData = (days: number) => {
+  const data: DataPoint[] = [];
+  const today = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    data.push({
+      date: date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+      value: Math.floor(Math.random() * (1200 - 600) + 600)
+    });
+  }
+  
+  return data;
+};
+
+const chartDataMap = {
+  '7': generateChartData(7),
+  '30': generateChartData(30),
+  '90': generateChartData(90)
+};
 
 const tenants: Tenant[] = [
   { id: 1, name: 'RUDRA', dataUsage: '22.4 GB' },
@@ -136,246 +107,302 @@ const tenants: Tenant[] = [
   { id: 6, name: 'NDS', dataUsage: '29.3 GB' }
 ];
 
+const topCards = [
+  {
+    icon: (
+      <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" />
+      <path d="M65 30H30M30 30L40 20M30 30L40 40" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M35 70H70M70 70L60 60M70 70L60 80" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+
+    ),
+    title: 'TOTAL DATA EXCHANGED',
+    value: '80.4 TB',
+    width: { xs: '100%', sm: '30%' },
+    backgroundColor: '#4DABF7',
+  },
+  {
+    image: '/Users.svg',
+    title: 'HOTSPOT USERS',
+    value: '23K/24.2K',
+    width: { xs: '100%', sm: '30%' },
+  },
+  {
+    image: '/router.png',
+    title: 'ONLINE ROUTERS',
+    value: '201/345',
+    width: { xs: '100%', sm: '30%' },
+  },
+];
+
+const bottomCards = [
+  {
+    image: '/cruise ship.png',
+    title: 'FLEETS',
+    value: '45',
+    width: { xs: '100%', sm: '48%', md: '24%' },
+  },
+  {
+    image: '/building.png',
+    title: 'TENANTS',
+    value: '23',
+    width: { xs: '100%', sm: '48%', md: '24%' },
+  },
+];
+
 // Navigation items
 
 
 export default function Dashboard() {
   const theme = useTheme();
   const [filterDays, setFilterDays] = useState('30');
+  const [searchQuery, setSearchQuery] = useState('');
   
-  return (
-    <Box sx={{ display: 'flex', bgcolor: '#111827', minHeight: '100vh' }}>
-   
-      <CssBaseline />
-      <AppBarComponent/>
-      <DrawerComponent/>
-      
-  
-      
-      <Box
-        component="main"
-        sx={{ 
-          flexGrow: 1, 
-          p: 3, 
-          bgcolor: '#111827',
-          color: 'white',
-          marginTop: '64px'
-        }}
-      >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          {/* Total Data Exchanged Card */}
-          <StyledPaper sx={{ width: { xs: '100%', sm: '30%' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Box sx={{ mr: 2 }}>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ display: 'block', mb: 1 }}>
-                  TOTAL DATA EXCHANGED
-                </Typography>
-                <Typography variant="h4" color="white">
-                  80.4 TB
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M7 17L17 7M17 7H7M17 7V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </IconButton>
-            </Box>
-          </StyledPaper>
-          
-          {/* Hotspot Users Card */}
-          <StyledPaper sx={{ width: { xs: '100%', sm: '30%' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Box sx={{ mr: 2 }}>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ display: 'block', mb: 1 }}>
-                  HOTSPOT USERS
-                </Typography>
-                <Typography variant="h4" color="white">
-                  23K/24.2K
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                <ChevronRight />
-              </IconButton>
-            </Box>
-          </StyledPaper>
-          
-          {/* Online Routers Card */}
-          <StyledPaper sx={{ width: { xs: '100%', sm: '30%' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Box sx={{ mr: 2 }}>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ display: 'block', mb: 1 }}>
-                  ONLINE ROUTERS
-                </Typography>
-                <Typography variant="h4" color="white">
-                  201/345
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                <ChevronRight />
-              </IconButton>
-            </Box>
-          </StyledPaper>
-        </Box>
-        
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-          {/* Fleets Card */}
-          <StyledPaper sx={{ width: { xs: '100%', sm: '48%', md: '24%' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Box sx={{ mr: 2 }}>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ display: 'block', mb: 1 }}>
-                  FLEETS
-                </Typography>
-                <Typography variant="h4" color="white">
-                  45
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                <ChevronRight />
-              </IconButton>
-            </Box>
-          </StyledPaper>
-          
-          {/* Tenants Card */}
-          <StyledPaper sx={{ width: { xs: '100%', sm: '48%', md: '24%' } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              <Box sx={{ mr: 2 }}>
-                <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ display: 'block', mb: 1 }}>
-                  TENANTS
-                </Typography>
-                <Typography variant="h4" color="white">
-                  23
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
-                <ChevronRight />
-              </IconButton>
-            </Box>
-          </StyledPaper>
+  // Filter tenants based on search query
+  const filteredTenants = tenants.filter(tenant =>
+    tenant.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-          {/* Search and Filter */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 2, 
-            ml: 'auto', 
-            width: { xs: '100%', sm: '48%', md: 'auto' } 
-          }}>
-            <SearchBox>
-              <SearchIconWrapper>
-                <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                placeholder="Search for Tenant"
-                inputProps={{ 'aria-label': 'search' }}
-              />
-            </SearchBox>
-            
-            <Select
-              value={filterDays}
-              onChange={(e) => setFilterDays(e.target.value)}
-              sx={{ 
-                bgcolor: 'rgba(255,255,255,0.1)', 
-                color: 'white',
-                borderRadius: 1,
-                height: 40,
-                '.MuiSelect-icon': { color: 'white' },
-                '.MuiOutlinedInput-notchedOutline': { border: 'none' }
-              }}
-            >
-              <MenuItem value="7">Last 7 Days</MenuItem>
-              <MenuItem value="30">Last 30 Days</MenuItem>
-              <MenuItem value="90">Last 90 Days</MenuItem>
-            </Select>
-          </Box>
-        </Box>
-        
-        {/* Chart and Table Section */}
-        <Paper 
+  // Get chart data based on selected time period
+  const currentChartData = chartDataMap[filterDays as keyof typeof chartDataMap];
+
+  // Prepare data for MUI X-Charts
+  const chartDates = currentChartData.map(item => item.date);
+  const chartValues = currentChartData.map(item => item.value);
+
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBarComponent />
+      <Box sx={{ display: 'flex', flex: 1 }}>
+        <DrawerComponent />
+        <Box
+          component="main"
           sx={{ 
-            bgcolor: '#1a2332', 
+            flexGrow: 1, 
             p: 3, 
-            color: 'white',
-            borderRadius: 2,
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            bgcolor: theme.palette.background.default,
+            color: theme.palette.text.primary,
+            marginTop: '64px',
+            transition: theme.transitions.create('margin', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
           }}
         >
-          <Box sx={{ height: 300, mb: 4 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 10,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: 'white' }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                />
-                <YAxis 
-                  tick={{ fill: 'white' }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickFormatter={(value) => `${value}.00`}
-                />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#2a4465', color: 'white', border: 'none' }}
-                  labelStyle={{ color: 'white' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#4299e1" 
-                  strokeWidth={2}
-                  dot={{ fill: '#4299e1', r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <Typography variant="caption" align="center" sx={{ display: 'block', mt: 1 }}>
-              Tenants Data Usage Pattern
-            </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+            {topCards.map((card, index) => (
+              <StatCard
+                key={index}
+                {...card}
+              />
+            ))}
           </Box>
           
-          <Typography variant="h6" sx={{ mt: 2, mb: 2 }}>Top Tenants</Typography>
-          <TableContainer>
-            <Table sx={{ minWidth: 650 }} aria-label="tenants table">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>No.</TableCell>
-                  <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Name</TableCell>
-                  <TableCell align="right" sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Data Usage</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tenants.map((tenant) => (
-                  <TableRow
-                    key={tenant.id}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+            {bottomCards.map((card, index) => (
+              <StatCard
+                key={index}
+                {...card}
+              />
+            ))}
+
+            {/* Search and Filter */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              ml: 'auto', 
+              width: { xs: '100%', sm: '48%', md: 'auto' } 
+            }}>
+              <SearchBox>
+                <SearchIconWrapper>
+                  <SearchIcon />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Search for Tenant"
+                  inputProps={{ 'aria-label': 'search' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </SearchBox>
+              
+              <Select
+                value={filterDays}
+                onChange={(e) => setFilterDays(e.target.value)}
+                sx={{ 
+                  bgcolor: alpha(theme.palette.common.white, 0.1),
+                  color: theme.palette.text.primary,
+                  borderRadius: 1,
+                  height: 40,
+                  '.MuiSelect-icon': { color: theme.palette.text.primary },
+                  '.MuiOutlinedInput-notchedOutline': { border: 'none' }
+                }}
+              >
+                <MenuItem value="7">Last 7 Days</MenuItem>
+                <MenuItem value="30">Last 30 Days</MenuItem>
+                <MenuItem value="90">Last 90 Days</MenuItem>
+              </Select>
+            </Box>
+          </Box>
+          
+          {/* Chart and Table Section */}
+          <Paper 
+            sx={{ 
+              bgcolor: theme.palette.background.paper,
+              p: 3, 
+              color: theme.palette.text.primary,
+              borderRadius: 2,
+              boxShadow: theme.shadows[1],
+              display: 'flex',
+              gap: 4
+            }}
+          >
+            {/* Chart Section */}
+            <Box sx={{ flex: '1 1 60%' }}>
+              <Box sx={{ height: 300 }}>
+                <LineChart
+                  xAxis={[{ 
+                    data: chartDates,
+                    scaleType: 'point',
+                    tickLabelStyle: {
+                      fill: theme.palette.text.primary,
+                    }
+                  }]}
+                  yAxis={[{
+                    tickLabelStyle: {
+                      fill: theme.palette.text.primary,
+                    }
+                  }]}
+                  series={[
+                    {
+                      data: chartValues,
+                      area: true,
+                      color: theme.palette.primary.main,
+                      showMark: true,
+                      curve: "linear"
+                    }
+                  ]}
+                  height={300}
+                  sx={{
+                    '.MuiLineElement-root': {
+                      strokeWidth: 2,
+                    },
+                    '.MuiAreaElement-root': {
+                      fill: `${alpha(theme.palette.primary.main, 0.1)}`,
+                    }
+                  }}
+                />
+                <Typography 
+                  variant="caption" 
+                  align="center" 
+                  sx={{ 
+                    display: 'block', 
+                    mt: 1, 
+                    color: theme.palette.text.secondary 
+                  }}
+                >
+                  Tenants Data Usage Pattern
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Table Section */}
+            <Box sx={{ flex: '1 1 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <TableContainer>
+                <Table sx={{ width: '100%' }} aria-label="tenants table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell 
+                        sx={{ 
+                          color: theme.palette.text.secondary,
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          padding: '12px 0'
+                        }}
+                      >
+                        No.
+                      </TableCell>
+                      <TableCell 
+                        sx={{ 
+                          color: theme.palette.text.secondary,
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          padding: '12px 24px'
+                        }}
+                      >
+                        Name
+                      </TableCell>
+                      <TableCell 
+                        align="right" 
+                        sx={{ 
+                          color: theme.palette.text.secondary,
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          padding: '12px 0'
+                        }}
+                      >
+                        Data Usage
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredTenants.map((tenant) => (
+                      <TableRow
+                        key={tenant.id}
+                        sx={{ 
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          '&:nth-of-type(odd)': { backgroundColor: alpha(theme.palette.common.white, 0.03) },
+                          '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.05) }
+                        }}
+                      >
+                        <TableCell 
+                          component="th" 
+                          scope="row" 
+                          sx={{ 
+                            color: theme.palette.text.primary,
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            padding: '12px 0'
+                          }}
+                        >
+                          {tenant.id}
+                        </TableCell>
+                        <TableCell 
+                          sx={{ 
+                            color: theme.palette.text.primary,
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            padding: '12px 24px'
+                          }}
+                        >
+                          {tenant.name}
+                        </TableCell>
+                        <TableCell 
+                          align="right" 
+                          sx={{ 
+                            color: theme.palette.text.primary,
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            padding: '12px 0'
+                          }}
+                        >
+                          {tenant.dataUsage}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}> 
+                  <Typography 
+                    variant="h6" 
                     sx={{ 
-                      '&:last-child td, &:last-child th': { border: 0 },
-                      '&:nth-of-type(odd)': { backgroundColor: 'rgba(255,255,255,0.03)' },
-                      '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' }
+                      mb: 2, 
+                      color: theme.palette.text.primary,
+                      fontWeight: 500
                     }}
                   >
-                    <TableCell component="th" scope="row" sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                      {tenant.id}
-                    </TableCell>
-                    <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{tenant.name}</TableCell>
-                    <TableCell align="right" sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{tenant.dataUsage}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+                    Top Tenants
+                  </Typography>
+                </Box>
+              </TableContainer>
+            </Box>
+          </Paper>
+        </Box>
       </Box>
     </Box>
   );
