@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     );
 
    
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://rudra-aayush-mehtas-projects.vercel.app/'}/reset-password?token=${resetToken}`;
 
     return NextResponse.json({
       message: 'Token generated successfully',
