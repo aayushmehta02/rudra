@@ -3,9 +3,13 @@
 import { SIGNUP_USER } from '@/graphql/auth';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useMutation } from '@apollo/client';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {
   Box,
   Button,
+  IconButton,
+  InputAdornment,
   Paper,
   TextField,
   Typography,
@@ -24,6 +28,8 @@ export default function SignupForm() {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [customError, setCustomError] = useState('');
   const { showSnackbar } = useSnackbar();
 
@@ -37,6 +43,14 @@ export default function SignupForm() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword((show) => !show);
   };
 
   const validateForm = () => {
@@ -191,7 +205,7 @@ export default function SignupForm() {
             fullWidth
             label="Password"
             name="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
             margin="normal"
@@ -199,6 +213,18 @@ export default function SignupForm() {
             required
             InputProps={{
               style: { backgroundColor: '#1c1c24', color: '#fff' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                    sx={{ color: '#aaa' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
             InputLabelProps={{
               style: { color: '#aaa' },
@@ -209,7 +235,7 @@ export default function SignupForm() {
             fullWidth
             label="Confirm Password"
             name="confirmPassword"
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={handleChange}
             margin="normal"
@@ -217,6 +243,18 @@ export default function SignupForm() {
             required
             InputProps={{
               style: { backgroundColor: '#1c1c24', color: '#fff' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle confirm password visibility"
+                    onClick={handleClickShowConfirmPassword}
+                    edge="end"
+                    sx={{ color: '#aaa' }}
+                  >
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
             InputLabelProps={{
               style: { color: '#aaa' },
@@ -239,8 +277,6 @@ export default function SignupForm() {
           >
             {loading ? 'Signing up...' : 'SIGN UP'}
           </Button>
-
-         
         </form>
       </Paper>
     </Box>

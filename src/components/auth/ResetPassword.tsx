@@ -1,9 +1,11 @@
 'use client';
-
+//form logic and ui
 import { UPDATE_PASSWORD } from '@/graphql/auth';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useMutation } from '@apollo/client';
-import { Box, Button, Paper, TextField, Typography } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Box, Button, IconButton, InputAdornment, Paper, TextField, Typography } from '@mui/material';
 import bcrypt from 'bcryptjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -29,6 +31,8 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
     password: '',
     confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [tokenValid, setTokenValid] = useState(false);
@@ -121,6 +125,14 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword((show) => !show);
   };
 
   if (!tokenValid) {
@@ -223,13 +235,27 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
             fullWidth
             label="New Password"
             name="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleChange}
             margin="normal"
             variant="filled"
             required
-            InputProps={{ style: { backgroundColor: '#1c1c24', color: '#fff' } }}
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                    sx={{ color: '#aaa' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             InputLabelProps={{ style: { color: '#aaa' } }}
           />
 
@@ -237,13 +263,27 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
             fullWidth
             label="Confirm New Password"
             name="confirmPassword"
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={handleChange}
             margin="normal"
             variant="filled"
             required
-            InputProps={{ style: { backgroundColor: '#1c1c24', color: '#fff' } }}
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle confirm password visibility"
+                    onClick={handleClickShowConfirmPassword}
+                    edge="end"
+                    sx={{ color: '#aaa' }}
+                  >
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             InputLabelProps={{ style: { color: '#aaa' } }}
           />
 

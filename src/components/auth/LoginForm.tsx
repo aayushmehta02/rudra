@@ -3,9 +3,13 @@
 import { LOGIN_USER } from '@/graphql/auth';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useLazyQuery } from '@apollo/client';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {
   Box,
   Button,
+  IconButton,
+  InputAdornment,
   Paper,
   TextField,
   Typography,
@@ -19,11 +23,16 @@ export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { showSnackbar } = useSnackbar();
   const [loginUser, { loading }] = useLazyQuery(LOGIN_USER, {
     fetchPolicy: 'no-cache'
   });
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +143,7 @@ export default function LoginForm() {
           <TextField
             fullWidth
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
@@ -142,6 +151,18 @@ export default function LoginForm() {
             required
             InputProps={{
               style: { backgroundColor: '#1c1c24', color: '#fff' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    edge="end"
+                    sx={{ color: '#aaa' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
             }}
             InputLabelProps={{
               style: { color: '#aaa' },
