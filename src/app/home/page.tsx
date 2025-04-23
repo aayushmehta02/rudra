@@ -279,7 +279,7 @@ export default function Dashboard() {
                       data: chartValues,
                       area: true,
                       color: theme.palette.primary.main,
-                      showMark: true,
+                      showMark: false,
                       curve: "linear"
                     }
                   ]}

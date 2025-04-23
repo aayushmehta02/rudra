@@ -3,42 +3,107 @@
 import { SIGNUP_USER } from '@/graphql/auth';
 import { useMutation } from '@apollo/client';
 import {
-    Box,
-    Button,
-    Paper,
-    TextField,
-    Typography,
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material';
+import bcrypt from 'bcryptjs';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+const SALT_ROUNDS = 10;
+
 export default function SignupForm() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [customError, setCustomError] = useState('');
 
-  const [signupUser, { loading, error }] = useMutation(SIGNUP_USER);
+  const [signupUser, { loading }] = useMutation(SIGNUP_USER, {
+    fetchPolicy: 'no-cache'
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+      setCustomError('Please fill in all fields');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setCustomError('Passwords do not match');
+      return false;
+    }
+
+    if (formData.password.length < 8) {
+      setCustomError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setCustomError('Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCustomError('');
 
+    if (!validateForm()) return;
+
     try {
-      const res = await signupUser({
+      // Hash password
+      const hashedPassword = await bcrypt.hash(formData.password, SALT_ROUNDS);
+
+      // Attempt signup
+      const { data } = await signupUser({
         variables: {
-          username,
-          email,
-          password,
+          username: formData.username,
+          email: formData.email,
+          password: hashedPassword
         },
       });
-      const user = res.data?.insert_users?.returning?.[0];
+      
+      const user = data?.insert_Users?.returning?.[0];
       if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-        // Optionally: redirect user to login/dashboard
+        // Store user info in localStorage (never store passwords)
+        const userToStore = {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        };
+        localStorage.setItem('user', JSON.stringify(userToStore));
+        localStorage.setItem('token', user.id);
+        router.push('/home');
+      } else {
+        setCustomError('Signup failed. Please try again.');
       }
-    } catch (err) {
-      setCustomError('Signup failed. Please try again.');
+    } catch (err: any) {
       console.error('Signup error:', err);
+      // Check for duplicate email error
+      if (err.message?.includes('Uniqueness violation')) {
+        setCustomError('This email is already registered');
+      } else {
+        setCustomError('Signup failed. Please try again.');
+      }
     }
   };
 
@@ -71,9 +136,9 @@ export default function SignupForm() {
           future<span style={{ color: '#0ab4ff' }}>konnect</span>
         </Typography>
 
-        {(customError || error) && (
+        {customError && (
           <Typography color="error" align="center" sx={{ mb: 2 }}>
-            {customError || error?.message}
+            {customError}
           </Typography>
         )}
 
@@ -81,9 +146,10 @@ export default function SignupForm() {
           <TextField
             fullWidth
             label="Username"
+            name="username"
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={formData.username}
+            onChange={handleChange}
             margin="normal"
             variant="filled"
             required
@@ -98,9 +164,10 @@ export default function SignupForm() {
           <TextField
             fullWidth
             label="Email"
+            name="email"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
             margin="normal"
             variant="filled"
             required
@@ -115,9 +182,28 @@ export default function SignupForm() {
           <TextField
             fullWidth
             label="Password"
+            name="password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
+            margin="normal"
+            variant="filled"
+            required
+            InputProps={{
+              style: { backgroundColor: '#1c1c24', color: '#fff' },
+            }}
+            InputLabelProps={{
+              style: { color: '#aaa' },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="Confirm Password"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
             margin="normal"
             variant="filled"
             required
@@ -145,6 +231,8 @@ export default function SignupForm() {
           >
             {loading ? 'Signing up...' : 'SIGN UP'}
           </Button>
+
+         
         </form>
       </Paper>
     </Box>

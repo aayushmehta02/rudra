@@ -18,6 +18,7 @@
     "@mui/x-date-pickers": "^8.0.0",
     "@supabase/supabase-js": "^2.49.4",
     "@types/jsonwebtoken": "^9.0.9",
+    "bcryptjs": "^3.0.2",
     "dayjs": "^1.11.13",
     "graphql": "^16.10.0",
     "jsonwebtoken": "^9.0.2",

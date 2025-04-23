@@ -107,6 +107,11 @@ export default function DrawerComponent() {
     setIsLoggedIn(!!token);
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
 
   return (
     <Drawer
@@ -211,7 +216,7 @@ export default function DrawerComponent() {
       <Divider sx={{ borderColor: theme.palette.divider }} />
       <List>
         <ListItem>
-          <ListItemButton>
+          <ListItemButton onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon />
             </ListItemIcon>
