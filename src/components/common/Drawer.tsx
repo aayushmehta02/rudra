@@ -108,7 +108,7 @@ export default function DrawerComponent() {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
     if (!token) {
-      router.push('/login');
+      router.push('/');
     }
   }, [router]);
 
@@ -117,7 +117,7 @@ export default function DrawerComponent() {
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     showSnackbar('Logged out successfully', 'success');
-    router.push('/login');
+    router.push('/');
   };
 
   if (!isLoggedIn) {

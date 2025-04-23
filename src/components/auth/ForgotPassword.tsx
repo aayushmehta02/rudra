@@ -187,7 +187,7 @@ export default function ForgotPasswordPage() {
 
           <Box textAlign="center" mt={2}>
             <Link 
-              href="/login" 
+              href="/" 
               style={{ 
                 color: '#0ab4ff', 
                 textDecoration: 'none' 
