@@ -55,7 +55,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
+const StyledListItemButton = styled(ListItemButton)(({  }) => ({
   minHeight: 48,
   marginLeft: 10,
   marginRight: 10,
@@ -103,17 +103,26 @@ export default function DrawerComponent() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { showSnackbar } = useSnackbar();
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
-  }, []);
+    if (!token) {
+      router.push('/login');
+    }
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setIsLoggedIn(false);
     showSnackbar('Logged out successfully', 'success');
-    router.push('/');
+    router.push('/login');
   };
+
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
     <Drawer

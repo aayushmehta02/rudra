@@ -4,6 +4,7 @@ import {
   CircularProgress,
   IconButton,
   Paper,
+  SvgIcon,
   Table,
   TableBody,
   TableCell,
@@ -46,7 +47,7 @@ interface AuditTrailTableProps {
   toggleRowExpansion: (id: string) => void;
   handleChangePage: (event: unknown, newPage: number) => void;
   handleChangeRowsPerPage: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  ExpandIcon: React.ComponentType<any>;
+  ExpandIcon: typeof SvgIcon;
 }
 
 const TablePaginationActions = (props: TablePaginationActionsProps) => {
@@ -210,7 +211,7 @@ export const AuditTrailTable: React.FC<AuditTrailTableProps> = ({
                           sx={{ color: 'white' }}
                         >
                           <ExpandIcon
-                            sx={{
+                            style={{
                               transform: expandedRows[log.id] ? 'rotate(180deg)' : 'rotate(0)',
                               transition: 'transform 0.3s'
                             }}

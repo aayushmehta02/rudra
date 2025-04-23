@@ -59,14 +59,15 @@ export default function ResetPasswordPage() {
           setError(data.message || 'Invalid or expired reset link');
           setTokenValid(false);
         }
-      } catch (err) {
+      } catch (err: Error | unknown) {
         setError('An error occurred while verifying the reset link');
+        console.error('Error verifying reset link:', err);
         setTokenValid(false);
       }
     };
 
     verifyToken();
-  }, [searchParams]);
+  }, [searchParams]); 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

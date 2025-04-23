@@ -75,9 +75,6 @@ interface Tenant {
 export default function Dashboard() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-
- 
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {

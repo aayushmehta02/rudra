@@ -104,10 +104,10 @@ export default function SignupForm() {
         setCustomError('Signup failed. Please try again.');
         showSnackbar('Signup failed. Please try again.');
       }
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error('Signup error:', err);
       
-      if (err.message?.includes('Uniqueness violation')) {
+      if (err instanceof Error && err.message?.includes('Uniqueness violation')) {
         setCustomError('This email is already registered');
       } else {
         setCustomError('Signup failed. Please try again.');

@@ -78,10 +78,6 @@ export default function LoginForm() {
     }
   };
 
-  const handleResetPassword = () => {
-    router.push('/reset-password');
-  };
-
   return (
     <Box
       sx={{

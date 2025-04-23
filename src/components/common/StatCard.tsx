@@ -11,7 +11,7 @@ interface StatCardProps {
   image?: string | React.ReactNode;
 }
 
-export const StatCard = ({ title, value, width = { xs: '100%', sm: '30%' }, icon, backgroundColor, image }: StatCardProps) => {
+export const StatCard = ({ title, value, width = { xs: '100%', sm: '30%' }, icon, image }: StatCardProps) => {
   const theme = useTheme();
   
   const renderImage = () => {

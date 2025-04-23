@@ -74,7 +74,6 @@ const exportToCSV = (logs: AuditLog[]) => {
 export default function AuditTrail() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const { showSnackbar } = useSnackbar();
 
 
