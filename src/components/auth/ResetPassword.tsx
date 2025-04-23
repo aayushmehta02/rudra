@@ -5,7 +5,7 @@ import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useMutation } from '@apollo/client';
 import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import bcrypt from 'bcryptjs';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const SALT_ROUNDS = 10;
@@ -17,9 +17,12 @@ interface DecodedToken {
   exp: number;
 }
 
-export default function ResetPasswordPage() {
+interface ResetPasswordPageProps {
+  token: string | null;
+}
+
+export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams(); 
   const { showSnackbar } = useSnackbar();
 
   const [formData, setFormData] = useState({
@@ -34,7 +37,6 @@ export default function ResetPasswordPage() {
   const [updatePassword] = useMutation(UPDATE_PASSWORD);
 
   useEffect(() => {
-    const token = searchParams.get('token'); // ✅ read directly here
     if (!token) {
       setError('Invalid reset link - No token provided');
       return;
@@ -67,7 +69,7 @@ export default function ResetPasswordPage() {
     };
 
     verifyToken();
-  }, [searchParams]);
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
