@@ -17,10 +17,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 
-// Action options
+
 export const actionOptions = ['Create', 'Delete', 'Update', 'Download'];
 
-// Category options
 export const categoryOptions = ['Admin', 'Firewall Rule', 'Router Certificate', 'Hotspot User', 'Firewall Template', 'Router'];
 
 export interface FiltersProps {
@@ -50,7 +49,7 @@ export default function Filters({
   onToDateChange,
   onClearFilters
 }: FiltersProps) {
-  // Check if any filters are active
+ 
   const hasActiveFilters = selectedCategory !== '' || 
                          selectedActions.length > 0 || 
                          searchUser !== '' || 
@@ -59,7 +58,8 @@ export default function Filters({
 
   return (
     <Paper sx={{ 
-      width: '250px', 
+      width: '100%', 
+
       bgcolor: '#1a2332', 
       color: 'white',
       p: 2,

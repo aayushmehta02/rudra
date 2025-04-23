@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
       ...prev,
       [name]: value.trim()
     }));
-    setError(''); // Clear error when user types
+    setError(''); 
   };
 
   const validateForm = () => {

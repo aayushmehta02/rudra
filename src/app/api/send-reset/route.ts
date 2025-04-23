@@ -14,14 +14,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create a reset token that expires in 1 hour
+    
     const resetToken = jwt.sign(
       { userId, email, username },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    // Create reset URL
+   
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
     return NextResponse.json({

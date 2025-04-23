@@ -55,7 +55,7 @@ export default function SignupForm() {
       return false;
     }
 
-    // Basic email validation
+   
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       
@@ -76,10 +76,10 @@ export default function SignupForm() {
     }
 
     try {
-      // Hash password
+
       const hashedPassword = await bcrypt.hash(formData.password, SALT_ROUNDS);
 
-      // Attempt signup
+    
       const { data } = await signupUser({
         variables: {
           username: formData.username,
@@ -90,7 +90,7 @@ export default function SignupForm() {
       
       const user = data?.insert_Users?.returning?.[0];
       if (user) {
-        // Store user info in localStorage (never store passwords)
+        
         const userToStore = {
           id: user.id,
           username: user.username,
@@ -106,7 +106,7 @@ export default function SignupForm() {
       }
     } catch (err: any) {
       console.error('Signup error:', err);
-      // Check for duplicate email error
+      
       if (err.message?.includes('Uniqueness violation')) {
         setCustomError('This email is already registered');
       } else {

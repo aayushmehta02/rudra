@@ -1,9 +1,10 @@
-// File: app/page.tsx
 'use client';
 
 import AppBarComponent from '@/components/common/AppBar';
 import DrawerComponent from '@/components/common/Drawer';
 import { StatCard } from '@/components/common/StatCard';
+import { TenantsTable } from '@/components/home/TenantsTable';
+import { UsageChart } from '@/components/home/UsageChart';
 import { GET_TENANT_USAGE, GET_TENANTS } from '@/graphql/getData';
 import { useLazyQuery, useQuery } from '@apollo/client';
 import {
@@ -12,23 +13,14 @@ import {
 import {
   alpha,
   Box,
-  CircularProgress,
   InputBase,
   MenuItem,
   Paper,
   Select,
   styled,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
   useMediaQuery,
   useTheme
 } from '@mui/material';
-import { LineChart } from '@mui/x-charts/LineChart';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -65,7 +57,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-// Types
+
 interface TenantUsage {
   usage_time: string;
   data_usage_gb: number;
@@ -85,7 +77,7 @@ export default function Dashboard() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Add client-side only rendering for components that use browser APIs
+ 
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
@@ -146,13 +138,13 @@ export default function Dashboard() {
       width: { xs: '100%', sm: '48%', md: '24%', lg: '24%' },
     },
   ];
-  // Effect to fetch usage data when tenant is selected
+  
   useEffect(() => {
     if (selectedTenantId) {
       console.log('Fetching usage data for tenant:', selectedTenantId);
       getTenantUsage({
         variables: {
-          id: selectedTenantId.toString() // Ensure ID is string
+          id: selectedTenantId.toString() 
         }
       });
     }
@@ -214,7 +206,7 @@ export default function Dashboard() {
   // Get filtered data for mobile view
   const getFilteredChartData = (dates: string[], values: number[]) => {
     if (isMobile) {
-      // Take every other point for mobile to reduce density
+  
       return {
         dates: dates.filter((_, i) => i % 2 === 0),
         values: values.filter((_, i) => i % 2 === 0)
@@ -343,231 +335,26 @@ export default function Dashboard() {
               gap: { xs: 2, md: 4 }
             }}
           >
-            {/* Chart Section */}
             {isClient && (
               <Box sx={{ 
                 flex: { xs: '1 1 100%', md: '1 1 60%' },
                 minHeight: { xs: 250, sm: 300 }
               }}>
-                <Box sx={{ 
-                  height: { xs: 250, sm: 300 },
-                  width: '100%',
-                  maxWidth: '100%',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
-                  {usageLoading ? (
-                    <Box sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <CircularProgress />
-                    </Box>
-                  ) : displayDates.length > 0 ? (
-                    <>
-                      <LineChart
-                        xAxis={[{ 
-                          data: displayDates,
-                          scaleType: 'point',
-                          tickLabelStyle: {
-                            fill: theme.palette.text.primary,
-                            fontSize: isMobile ? 10 : 12
-                          }
-                        }]}
-                        yAxis={[{
-                          tickLabelStyle: {
-                            fill: theme.palette.text.primary,
-                            fontSize: isMobile ? 10 : 12
-                          }
-                        }]}
-                        series={[
-                          {
-                            data: displayValues,
-                            area: true,
-                            color: theme.palette.primary.main,
-                            showMark: false,
-                            curve: "linear"
-                          }
-                        ]}
-                        height={isMobile ? 250 : 300}
-                        margin={{
-                          left: isMobile ? 40 : 50,
-                          right: isMobile ? 10 : 20,
-                          top: isMobile ? 10 : 20,
-                          bottom: isMobile ? 30 : 40
-                        }}
-                        sx={{
-                          '.MuiLineElement-root': {
-                            strokeWidth: 2,
-                          },
-                          '.MuiAreaElement-root': {
-                            fill: `${alpha(theme.palette.primary.main, 0.1)}`,
-                          }
-                        }}
-                      />
-                      <Typography 
-                        variant="caption" 
-                        align="center" 
-                        sx={{ 
-                          display: 'block', 
-                          mt: 1, 
-                          color: theme.palette.text.secondary 
-                        }}
-                      >
-                        Data Usage Over Time (GB)
-                      </Typography>
-                    </>
-                  ) : (
-                    <Box sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 1
-                    }}>
-                      <Typography color="text.secondary">
-                        No usage data available
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Selected Tenant ID: {selectedTenantId || 'None'}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
+                <UsageChart
+                  displayDates={displayDates}
+                  displayValues={displayValues}
+                  isLoading={usageLoading}
+                  isMobile={isMobile}
+                  selectedTenantId={selectedTenantId}
+                />
               </Box>
             )}
 
-            {/* Table Section */}
-            <Box sx={{ 
-              flex: { xs: '1 1 100%', md: '1 1 40%' }, 
-              display: 'flex', 
-              flexDirection: 'column',
-              alignItems: 'center', 
-              justifyContent: 'center' 
-            }}>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
-                  color: theme.palette.text.primary,
-                  fontWeight: 500,
-                  alignSelf: { xs: 'center', md: 'flex-start' }
-                }}
-              >
-                Top Tenants
-              </Typography>
-              
-              <TableContainer sx={{ maxHeight: { xs: 250, sm: 'none' } }}>
-                <Table 
-                  sx={{ width: '100%' }} 
-                  aria-label="tenants table"
-                  size={isMobile ? "small" : "medium"}
-                >
-                  <TableHead>
-                    <TableRow>
-                      <TableCell 
-                        sx={{ 
-                          color: theme.palette.text.secondary,
-                          borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: isMobile ? '8px 0' : '12px 0',
-                          fontSize: isMobile ? '0.75rem' : 'inherit'
-                        }}
-                      >
-                        No.
-                      </TableCell>
-                      <TableCell 
-                        sx={{ 
-                          color: theme.palette.text.secondary,
-                          borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: isMobile ? '8px 12px' : '12px 24px',
-                          fontSize: isMobile ? '0.75rem' : 'inherit'
-                        }}
-                      >
-                        Name
-                      </TableCell>
-                      <TableCell 
-                        align="right" 
-                        sx={{ 
-                          color: theme.palette.text.secondary,
-                          borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: isMobile ? '8px 0' : '12px 0',
-                          fontSize: isMobile ? '0.75rem' : 'inherit'
-                        }}
-                      >
-                        Data Usage
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {tenantsLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 3 }}>
-                          <CircularProgress size={40} />
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredTenants.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          No tenants found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredTenants.map((tenant: Tenant, index: number) => (
-                        <TableRow
-                          key={tenant.id}
-                          sx={{ 
-                            '&:last-child td, &:last-child th': { border: 0 },
-                            '&:nth-of-type(odd)': { backgroundColor: alpha(theme.palette.common.white, 0.03) },
-                            '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.05) }
-                          }}
-                        >
-                          <TableCell 
-                            component="th" 
-                            scope="row" 
-                            sx={{ 
-                              color: theme.palette.text.primary,
-                              borderBottom: `1px solid ${theme.palette.divider}`,
-                              padding: isMobile ? '8px 0' : '12px 0',
-                              fontSize: isMobile ? '0.75rem' : 'inherit'
-                            }}
-                          >
-                            {index + 1}
-                          </TableCell>
-                          <TableCell 
-                            sx={{ 
-                              color: theme.palette.text.primary,
-                              borderBottom: `1px solid ${theme.palette.divider}`,
-                              padding: isMobile ? '8px 12px' : '12px 24px',
-                              fontSize: isMobile ? '0.75rem' : 'inherit'
-                            }}
-                          >
-                            {tenant.name}
-                          </TableCell>
-                          <TableCell 
-                            align="right" 
-                            sx={{ 
-                              color: theme.palette.text.primary,
-                              borderBottom: `1px solid ${theme.palette.divider}`,
-                              padding: isMobile ? '8px 0' : '12px 0',
-                              fontSize: isMobile ? '0.75rem' : 'inherit'
-                            }}
-                          >
-                            {tenant.data_usage_gb.toFixed(1)} GB
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
+            <TenantsTable
+              filteredTenants={filteredTenants}
+              isLoading={tenantsLoading}
+              isMobile={isMobile}
+            />
           </Paper>
         </Box>
       </Box>

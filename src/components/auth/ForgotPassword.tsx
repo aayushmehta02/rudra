@@ -7,9 +7,8 @@ import emailjs from '@emailjs/browser';
 import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useState } from 'react';
-// Initialize EmailJS with your public key
-emailjs.init("HE590tv6aI7jkUCn6"); // Replace with your actual public key
 
+emailjs.init("HE590tv6aI7jkUCn6"); 
 export default function ForgotPasswordPage() {
   const [formData, setFormData] = useState({
     email: '',
@@ -37,7 +36,7 @@ export default function ForgotPasswordPage() {
     setMessage('');
 
     try {
-      // First, verify the user exists
+     
       const { data } = await checkUser({
         variables: {
           email: formData.email,
@@ -52,7 +51,7 @@ export default function ForgotPasswordPage() {
       }
 
       const user = data.Users[0];
-      console.log('User found:', user); // Debug log
+      console.log('User found:', user); 
 
       // Generate reset token
       const response = await fetch('/api/send-reset', {
@@ -66,10 +65,10 @@ export default function ForgotPasswordPage() {
       });
 
       const result = await response.json();
-      console.log('API Response:', result); // Debug log
+      console.log('API Response:', result); 
 
       if (response.ok) {
-        // Send email using EmailJS
+       
         await emailjs.send(
         'service_gn1rjo8',
           'template_hbapyxs',
