@@ -2,6 +2,7 @@
 
 import AppBarComponent from '@/components/common/AppBar';
 import DrawerComponent from '@/components/common/Drawer';
+import Loader from '@/components/common/Loader';
 import { StatCard } from '@/components/common/StatCard';
 import { TenantsTable } from '@/components/home/TenantsTable';
 import { UsageChart } from '@/components/home/UsageChart';
@@ -216,6 +217,9 @@ export default function Dashboard() {
     chartData.dates,
     chartData.values
   );
+  if (tenantsLoading) {
+    return <Loader />;
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

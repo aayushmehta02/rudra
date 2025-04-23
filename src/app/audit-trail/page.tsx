@@ -4,6 +4,7 @@ import { AuditTrailTable } from '@/components/audit/AuditTrailTable';
 import Filters from '@/components/audit/Filters';
 import AppBarComponent from '@/components/common/AppBar';
 import DrawerComponent from '@/components/common/Drawer';
+import Loader from '@/components/common/Loader';
 import { GET_AUDIT_LOGS } from '@/graphql/getData';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useQuery } from '@apollo/client';
@@ -176,7 +177,9 @@ export default function AuditTrail() {
     );
   }
 
-  
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <Box sx={{ 
       display: 'flex', 

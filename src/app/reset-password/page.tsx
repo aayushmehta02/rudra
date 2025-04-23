@@ -1,5 +1,16 @@
-import ResetPasswordWrapper from '@/components/auth/ResetPasswordWrapper';
+import Loader from '@/components/common/Loader';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
-export default function ResetPasswordPage() {
-  return <ResetPasswordWrapper />;
+const ResetPasswordPage = dynamic(() => import('@/components/auth/ResetPassword'), {
+  loading: () => <Loader />,
+  ssr: false
+});
+
+export default function ResetPasswordWrapper() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ResetPasswordPage />
+    </Suspense>
+  );
 }
