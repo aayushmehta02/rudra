@@ -1,3 +1,5 @@
+'use client';
+
 import Loader from '@/components/common/Loader';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
