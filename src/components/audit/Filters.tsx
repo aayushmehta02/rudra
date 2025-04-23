@@ -1,3 +1,4 @@
+import { theme } from '@/theme/theme';
 import { FilterList as FilterIcon, Search as SearchIcon } from '@mui/icons-material';
 import {
     Box,
@@ -60,11 +61,11 @@ export default function Filters({
     <Paper sx={{ 
       width: '100%', 
 
-      bgcolor: '#1a2332', 
+      bgcolor: theme.palette.background.default, 
       color: 'white',
       p: 2,
       height: 'fit-content',
-      borderRadius: '8px'
+      
     }}>
       <Box sx={{ mb: 2 }}>
         {/* Header with Filter icon and title */}
