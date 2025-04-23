@@ -1,5 +1,5 @@
 'use client';
-
+//url search
 import { useSearchParams } from 'next/navigation';
 import ResetPasswordPage from './ResetPassword';
 
