@@ -19,7 +19,7 @@ interface DecodedToken {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ use this instead of props
+  const searchParams = useSearchParams(); 
   const { showSnackbar } = useSnackbar();
 
   const [formData, setFormData] = useState({
