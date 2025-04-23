@@ -8,14 +8,25 @@ import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useState } from 'react';
 
-emailjs.init("HE590tv6aI7jkUCn6"); 
 export default function ForgotPasswordPage() {
+  // Get EmailJS configuration from environment variables
+  const EMAILJS_PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+  const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+  const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+
+  // Validate EmailJS configuration
+  if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    console.error('EmailJS configuration is missing');
+    throw new Error('EmailJS configuration is required');
+  }
+
+  // Initialize EmailJS
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
   const [formData, setFormData] = useState({
     email: '',
     username: ''
   });
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
   const [checkUser] = useLazyQuery(REQUEST_PASSWORD_RESET, {
@@ -26,32 +37,29 @@ export default function ForgotPasswordPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value.trim()
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
 
     try {
-     
+      // Check if user exists
       const { data } = await checkUser({
         variables: {
-          email: formData.email,
-          username: formData.username
+          email: formData.email.toLowerCase(),
+          username: formData.username.toLowerCase()
         }
       });
 
       if (!data?.Users || data.Users.length === 0) {
         showSnackbar('No account found with these credentials', 'error');
-        setLoading(false);
         return;
       }
 
       const user = data.Users[0];
-      console.log('User found:', user); 
 
       // Generate reset token
       const response = await fetch('/api/send-reset', {
@@ -65,30 +73,32 @@ export default function ForgotPasswordPage() {
       });
 
       const result = await response.json();
-      console.log('API Response:', result); 
 
-      if (response.ok) {
-       
-        await emailjs.send(
-        'service_gn1rjo8',
-          'template_hbapyxs',
-          {
-            link: result.data?.resetUrl || '',
-            email: user.email,
-            to_name: user.username,
-            from_name: "FutureKonnect"
-          },
-          "HE590tv6aI7jkUCn6"
-        );
-
-        showSnackbar('Password reset link has been sent to your email', 'success');
-        setFormData({ email: '', username: '' }); // Clear form
-      } else {
-        showSnackbar(result.message || 'Failed to generate reset token', 'error');
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to generate reset token');
       }
+
+      // Send email
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          link: result.data?.resetUrl || '',
+          email: user.email,
+          to_name: user.username,
+          from_name: "FutureKonnect"
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+
+      showSnackbar('Password reset link has been sent to your email', 'success');
+      setFormData({ email: '', username: '' }); // Clear form
     } catch (err) {
       console.error('Password reset error:', err);
-      showSnackbar('Something went wrong. Please try again.', 'error');
+      showSnackbar(
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        'error'
+      );
     } finally {
       setLoading(false);
     }
@@ -123,18 +133,6 @@ export default function ForgotPasswordPage() {
         >
           Reset Password
         </Typography>
-
-        {message && (
-          <Typography 
-            align="center" 
-            sx={{ 
-              mb: 2, 
-              color: messageType === 'error' ? '#ff4d4d' : '#4caf50'
-            }}
-          >
-            {message}
-          </Typography>
-        )}
 
         <form onSubmit={handleSubmit}>
           <TextField
@@ -189,7 +187,7 @@ export default function ForgotPasswordPage() {
 
           <Box textAlign="center" mt={2}>
             <Link 
-              href="/" 
+              href="/login" 
               style={{ 
                 color: '#0ab4ff', 
                 textDecoration: 'none' 
