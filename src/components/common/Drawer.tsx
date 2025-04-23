@@ -1,7 +1,5 @@
 import { useSnackbar } from '@/providers/SnackbarProvider';
-import { Group as AdminsIcon, Assignment as AuditIcon, Payment as BillingIcon, Business as BusinessIcon, Dashboard as DashboardIcon, Security as FirewallIcon, DirectionsBoat as FleetIcon, Wifi as HotspotIcon, Logout as LogoutIcon, Router as RouterIcon } from '@mui/icons-material';
-import MailIcon from '@mui/icons-material/Mail';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
+import { Group as AdminsIcon, Assignment as AuditIcon, Payment as BillingIcon, Business as BusinessIcon, Dashboard as DashboardIcon, Security as FirewallIcon, DirectionsBoat as FleetIcon, Wifi as HotspotIcon, Inbox as InboxIcon, Logout as LogoutIcon, Mail as MailIcon, Router as RouterIcon } from '@mui/icons-material';
 import { Typography } from '@mui/material';
 import Divider from '@mui/material/Divider';
 import MuiDrawer from '@mui/material/Drawer';
@@ -55,13 +53,13 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-const StyledListItemButton = styled(ListItemButton)(({  }) => ({
+const StyledListItemButton = styled(ListItemButton)(({ theme }) => ({
   minHeight: 48,
   marginLeft: 10,
   marginRight: 10,
   borderRadius: 8,
   transition: 'all 0.2s ease-in-out',
-  '&:hover': {
+  '&:not(.Mui-disabled):hover': {
     backgroundColor: '#4DABF7 !important',
     '& .MuiListItemIcon-root': {
       color: '#fff !important',
@@ -78,19 +76,32 @@ const StyledListItemButton = styled(ListItemButton)(({  }) => ({
     '& .MuiListItemText-primary': {
       color: '#fff',
     }
+  },
+  '&.Mui-disabled': {
+    opacity: 0.5,
+    backgroundColor: 'transparent !important',
+    '&:hover': {
+      backgroundColor: 'transparent !important',
+      '& .MuiListItemIcon-root': {
+        color: 'inherit !important',
+      },
+      '& .MuiListItemText-primary': {
+        color: 'inherit !important',
+      }
+    }
   }
 }));
 
 const navItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, selected: true, navigate: '/home' },
-  { text: 'Tenants', icon: <BusinessIcon /> },
-  { text: 'Fleets', icon: <FleetIcon /> },
-  { text: 'Routers', icon: <RouterIcon /> },
-  { text: 'Firewall Templates', icon: <FirewallIcon /> },
-  { text: 'Hotspot Users', icon: <HotspotIcon /> },
+  { text: 'Tenants', icon: <BusinessIcon />, disabled: true },
+  { text: 'Fleets', icon: <FleetIcon />, disabled: true },
+  { text: 'Routers', icon: <RouterIcon />, disabled: true },
+  { text: 'Firewall Templates', icon: <FirewallIcon />, disabled: true },
+  { text: 'Hotspot Users', icon: <HotspotIcon />, disabled: true },
   { text: 'Audit Trail', icon: <AuditIcon />, navigate: '/audit-trail' },
-  { text: 'Billing', icon: <BillingIcon /> },
-  { text: 'Admins', icon: <AdminsIcon /> }
+  { text: 'Billing', icon: <BillingIcon />, disabled: true },
+  { text: 'Admins', icon: <AdminsIcon />, disabled: true }
 ];
 
 
@@ -161,13 +172,20 @@ export default function DrawerComponent() {
             <StyledListItemButton
               selected={item.navigate === pathname}
               onClick={() => {
-                if (item.navigate) {
+                if (item.navigate && !item.disabled) {
                   router.push(item.navigate);
                 }
               }}
+              disabled={item.disabled}
               sx={{
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
+                '&.Mui-disabled': {
+                  cursor: 'not-allowed',
+                  '&:hover': {
+                    backgroundColor: 'transparent !important',
+                  }
+                }
               }}
             >
               <ListItemIcon
@@ -194,13 +212,26 @@ export default function DrawerComponent() {
 
       <Divider sx={{ borderColor: theme.palette.divider }} />
 
+      
+
+      <Divider sx={{ borderColor: theme.palette.divider }} />
+
       <List>
         {['All mail', 'Trash', 'Spam'].map((text, index) => (
           <ListItem key={text} disablePadding>
             <StyledListItemButton
+              disabled={true}
               sx={{
                 justifyContent: open ? 'initial' : 'center',
                 px: 2.5,
+                '&.Mui-disabled': {
+                  opacity: 0.5,
+                  cursor: 'not-allowed',
+                  backgroundColor: 'transparent !important',
+                  '&:hover': {
+                    backgroundColor: 'transparent !important',
+                  }
+                }
               }}
             >
               <ListItemIcon
@@ -227,12 +258,40 @@ export default function DrawerComponent() {
       <Divider sx={{ borderColor: theme.palette.divider }} />
       <List>
         <ListItem>
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon>
+          <StyledListItemButton 
+            onClick={handleLogout}
+            disabled={false}
+            sx={{
+              justifyContent: open ? 'initial' : 'center',
+              px: 2.5,
+              '&.Mui-disabled': {
+                opacity: 0.5,
+                cursor: 'pointer',
+                backgroundColor: 'transparent !important',
+                '&:hover': {
+                  backgroundColor: 'transparent !important',
+                }
+              }
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: open ? 3 : 'auto',
+                justifyContent: 'center',
+                color: 'inherit'
+              }}
+            >
               <LogoutIcon />
             </ListItemIcon>
-              <ListItemText primary="Logout" />
-          </ListItemButton>
+            <ListItemText 
+              primary="Logout" 
+              sx={{
+                opacity: open ? 1 : 0,
+                color: 'inherit'
+              }}
+            />
+          </StyledListItemButton>
         </ListItem>
       </List>
     </Drawer>
