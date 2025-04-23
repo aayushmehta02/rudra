@@ -22,13 +22,11 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useMediaQuery,
   useTheme
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { useState } from 'react';
-
-
-
+import { useEffect, useState } from 'react';
 
 const SearchBox = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -115,24 +113,23 @@ const topCards = [
       <path d="M65 30H30M30 30L40 20M30 30L40 40" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
       <path d="M35 70H70M70 70L60 60M70 70L60 80" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-
     ),
     title: 'TOTAL DATA EXCHANGED',
     value: '80.4 TB',
-    width: { xs: '100%', sm: '30%' },
+    width: { xs: '100%', sm: '100%', md: '32%' },
     backgroundColor: '#4DABF7',
   },
   {
     image: '/Users.svg',
     title: 'HOTSPOT USERS',
     value: '23K/24.2K',
-    width: { xs: '100%', sm: '30%' },
+    width: { xs: '100%', sm: '48%', md: '32%' },
   },
   {
     image: '/router.png',
     title: 'ONLINE ROUTERS',
     value: '201/345',
-    width: { xs: '100%', sm: '30%' },
+    width: { xs: '100%', sm: '48%', md: '32%' },
   },
 ];
 
@@ -141,21 +138,28 @@ const bottomCards = [
     image: '/cruise ship.png',
     title: 'FLEETS',
     value: '45',
-    width: { xs: '100%', sm: '48%', md: '24%' },
+    width: { xs: '100%', sm: '48%', md: '24%', lg: '24%' },
   },
   {
     image: '/building.png',
     title: 'TENANTS',
     value: '23',
-    width: { xs: '100%', sm: '48%', md: '24%' },
+    width: { xs: '100%', sm: '48%', md: '24%', lg: '24%' },
   },
 ];
 
-// Navigation items
-
-
 export default function Dashboard() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Add client-side only rendering for components that use browser APIs
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const [filterDays, setFilterDays] = useState('30');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -171,6 +175,20 @@ export default function Dashboard() {
   const chartDates = currentChartData.map(item => item.date);
   const chartValues = currentChartData.map(item => item.value);
 
+  // Ensure data lengths match for mobile view
+  const getFilteredData = (dates: string[], values: number[]) => {
+    if (isMobile) {
+      // Take every other point for mobile to reduce density
+      return {
+        dates: dates.filter((_, i) => i % 2 === 0),
+        values: values.filter((_, i) => i % 2 === 0)
+      };
+    }
+    return { dates, values };
+  };
+
+  const { dates: displayDates, values: displayValues } = getFilteredData(chartDates, chartValues);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBarComponent />
@@ -180,7 +198,7 @@ export default function Dashboard() {
           component="main"
           sx={{ 
             flexGrow: 1, 
-            p: 3, 
+            p: { xs: 1, sm: 2, md: 3 }, 
             bgcolor: theme.palette.background.default,
             color: theme.palette.text.primary,
             marginTop: '64px',
@@ -190,7 +208,13 @@ export default function Dashboard() {
             }),
           }}
         >
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+          {/* Top Cards Section */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: { xs: 1, sm: 2 }, 
+            mb: { xs: 2, sm: 3 } 
+          }}>
             {topCards.map((card, index) => (
               <StatCard
                 key={index}
@@ -199,125 +223,188 @@ export default function Dashboard() {
             ))}
           </Box>
           
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-            {bottomCards.map((card, index) => (
-              <StatCard
-                key={index}
-                {...card}
-              />
-            ))}
-
-            {/* Search and Filter */}
+          {/* Bottom Cards and Search Section */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            flexWrap: 'wrap', 
+            gap: { xs: 1, sm: 2 },
+            mb: { xs: 2, sm: 3 },
+            alignItems: { xs: 'stretch', md: 'center' }
+          }}>
+            {/* Bottom Cards */}
             <Box sx={{ 
               display: 'flex', 
-              alignItems: 'center', 
-              gap: 2, 
-              ml: 'auto', 
-              width: { xs: '100%', sm: '48%', md: 'auto' } 
+              flexWrap: 'wrap', 
+              gap: { xs: 1, sm: 2 },
+              width: { xs: '100%', md: '100%' }
             }}>
-              <SearchBox>
-                <SearchIconWrapper>
-                  <SearchIcon />
-                </SearchIconWrapper>
-                <StyledInputBase
-                  placeholder="Search for Tenant"
-                  inputProps={{ 'aria-label': 'search' }}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+              {bottomCards.map((card, index) => (
+                <StatCard
+                  key={index}
+                  {...card}
                 />
-              </SearchBox>
-              
-              <Select
-                value={filterDays}
-                onChange={(e) => setFilterDays(e.target.value)}
-                sx={{ 
-                  bgcolor: alpha(theme.palette.common.white, 0.1),
-                  color: theme.palette.text.primary,
-                  borderRadius: 1,
-                  height: 40,
-                  '.MuiSelect-icon': { color: theme.palette.text.primary },
-                  '.MuiOutlinedInput-notchedOutline': { border: 'none' }
-                }}
-              >
-                <MenuItem value="7">Last 7 Days</MenuItem>
-                <MenuItem value="30">Last 30 Days</MenuItem>
-                <MenuItem value="90">Last 90 Days</MenuItem>
-              </Select>
+              ))}
             </Box>
+
+            {/* Search and Filter */}
+            {isClient && (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center', 
+                gap: { xs: 1, sm: 2 }, 
+                mt: { xs: 1, sm: 0 },
+                ml: { md: 'auto' }, 
+                width: { xs: '100%', md: 'auto' } 
+              }}>
+                <SearchBox sx={{ width: { xs: '100%', sm: '200px' } }}>
+                  <SearchIconWrapper>
+                    <SearchIcon />
+                  </SearchIconWrapper>
+                  <StyledInputBase
+                    placeholder="Search for Tenant"
+                    inputProps={{ 'aria-label': 'search' }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </SearchBox>
+                
+                <Select
+                  value={filterDays}
+                  onChange={(e) => setFilterDays(e.target.value)}
+                  sx={{ 
+                    bgcolor: alpha(theme.palette.common.white, 0.1),
+                    color: theme.palette.text.primary,
+                    borderRadius: 1,
+                    height: 40,
+                    width: { xs: '100%', sm: '150px' },
+                    '.MuiSelect-icon': { color: theme.palette.text.primary },
+                    '.MuiOutlinedInput-notchedOutline': { border: 'none' }
+                  }}
+                >
+                  <MenuItem value="7">Last 7 Days</MenuItem>
+                  <MenuItem value="30">Last 30 Days</MenuItem>
+                  <MenuItem value="90">Last 90 Days</MenuItem>
+                </Select>
+              </Box>
+            )}
           </Box>
           
           {/* Chart and Table Section */}
           <Paper 
             sx={{ 
               bgcolor: theme.palette.background.paper,
-              p: 3, 
+              p: { xs: 1, sm: 2, md: 3 }, 
               color: theme.palette.text.primary,
               borderRadius: 2,
               boxShadow: theme.shadows[1],
               display: 'flex',
-              gap: 4
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: { xs: 2, md: 4 }
             }}
           >
             {/* Chart Section */}
-            <Box sx={{ flex: '1 1 60%' }}>
-              <Box sx={{ height: 300 }}>
-                <LineChart
-                  xAxis={[{ 
-                    data: chartDates,
-                    scaleType: 'point',
-                    tickLabelStyle: {
-                      fill: theme.palette.text.primary,
-                    }
-                  }]}
-                  yAxis={[{
-                    tickLabelStyle: {
-                      fill: theme.palette.text.primary,
-                    }
-                  }]}
-                  series={[
-                    {
-                      data: chartValues,
-                      area: true,
-                      color: theme.palette.primary.main,
-                      showMark: false,
-                      curve: "linear"
-                    }
-                  ]}
-                  height={300}
-                  sx={{
-                    '.MuiLineElement-root': {
-                      strokeWidth: 2,
-                    },
-                    '.MuiAreaElement-root': {
-                      fill: `${alpha(theme.palette.primary.main, 0.1)}`,
-                    }
-                  }}
-                />
-                <Typography 
-                  variant="caption" 
-                  align="center" 
-                  sx={{ 
-                    display: 'block', 
-                    mt: 1, 
-                    color: theme.palette.text.secondary 
-                  }}
-                >
-                  Tenants Data Usage Pattern
-                </Typography>
+            {isClient && (
+              <Box sx={{ 
+                flex: { xs: '1 1 100%', md: '1 1 60%' },
+                minHeight: { xs: 250, sm: 300 }
+              }}>
+                <Box sx={{ 
+                  height: { xs: 250, sm: 300 },
+                  width: '100%',
+                  maxWidth: '100%',
+                  overflow: 'hidden'
+                }}>
+                  <LineChart
+                    xAxis={[{ 
+                      data: displayDates,
+                      scaleType: 'point',
+                      tickLabelStyle: {
+                        fill: theme.palette.text.primary,
+                        fontSize: isMobile ? 10 : 12
+                      }
+                    }]}
+                    yAxis={[{
+                      tickLabelStyle: {
+                        fill: theme.palette.text.primary,
+                        fontSize: isMobile ? 10 : 12
+                      }
+                    }]}
+                    series={[
+                      {
+                        data: displayValues,
+                        area: true,
+                        color: theme.palette.primary.main,
+                        showMark: false,
+                        curve: "linear"
+                      }
+                    ]}
+                    height={isMobile ? 250 : 300}
+                    margin={{
+                      left: isMobile ? 40 : 50,
+                      right: isMobile ? 10 : 20,
+                      top: isMobile ? 10 : 20,
+                      bottom: isMobile ? 30 : 40
+                    }}
+                    sx={{
+                      '.MuiLineElement-root': {
+                        strokeWidth: 2,
+                      },
+                      '.MuiAreaElement-root': {
+                        fill: `${alpha(theme.palette.primary.main, 0.1)}`,
+                      }
+                    }}
+                  />
+                  <Typography 
+                    variant="caption" 
+                    align="center" 
+                    sx={{ 
+                      display: 'block', 
+                      mt: 1, 
+                      color: theme.palette.text.secondary 
+                    }}
+                  >
+                    Tenants Data Usage Pattern
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
+            )}
 
             {/* Table Section */}
-            <Box sx={{ flex: '1 1 40%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <TableContainer>
-                <Table sx={{ width: '100%' }} aria-label="tenants table">
+            <Box sx={{ 
+              flex: { xs: '1 1 100%', md: '1 1 40%' }, 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  mb: 2, 
+                  color: theme.palette.text.primary,
+                  fontWeight: 500,
+                  alignSelf: { xs: 'center', md: 'flex-start' }
+                }}
+              >
+                Top Tenants
+              </Typography>
+              
+              <TableContainer sx={{ maxHeight: { xs: 250, sm: 'none' } }}>
+                <Table 
+                  sx={{ width: '100%' }} 
+                  aria-label="tenants table"
+                  size={isMobile ? "small" : "medium"}
+                >
                   <TableHead>
                     <TableRow>
                       <TableCell 
                         sx={{ 
                           color: theme.palette.text.secondary,
                           borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: '12px 0'
+                          padding: isMobile ? '8px 0' : '12px 0',
+                          fontSize: isMobile ? '0.75rem' : 'inherit'
                         }}
                       >
                         No.
@@ -326,7 +413,8 @@ export default function Dashboard() {
                         sx={{ 
                           color: theme.palette.text.secondary,
                           borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: '12px 24px'
+                          padding: isMobile ? '8px 12px' : '12px 24px',
+                          fontSize: isMobile ? '0.75rem' : 'inherit'
                         }}
                       >
                         Name
@@ -336,7 +424,8 @@ export default function Dashboard() {
                         sx={{ 
                           color: theme.palette.text.secondary,
                           borderBottom: `1px solid ${theme.palette.divider}`,
-                          padding: '12px 0'
+                          padding: isMobile ? '8px 0' : '12px 0',
+                          fontSize: isMobile ? '0.75rem' : 'inherit'
                         }}
                       >
                         Data Usage
@@ -359,7 +448,8 @@ export default function Dashboard() {
                           sx={{ 
                             color: theme.palette.text.primary,
                             borderBottom: `1px solid ${theme.palette.divider}`,
-                            padding: '12px 0'
+                            padding: isMobile ? '8px 0' : '12px 0',
+                            fontSize: isMobile ? '0.75rem' : 'inherit'
                           }}
                         >
                           {tenant.id}
@@ -368,7 +458,8 @@ export default function Dashboard() {
                           sx={{ 
                             color: theme.palette.text.primary,
                             borderBottom: `1px solid ${theme.palette.divider}`,
-                            padding: '12px 24px'
+                            padding: isMobile ? '8px 12px' : '12px 24px',
+                            fontSize: isMobile ? '0.75rem' : 'inherit'
                           }}
                         >
                           {tenant.name}
@@ -378,7 +469,8 @@ export default function Dashboard() {
                           sx={{ 
                             color: theme.palette.text.primary,
                             borderBottom: `1px solid ${theme.palette.divider}`,
-                            padding: '12px 0'
+                            padding: isMobile ? '8px 0' : '12px 0',
+                            fontSize: isMobile ? '0.75rem' : 'inherit'
                           }}
                         >
                           {tenant.dataUsage}
@@ -387,18 +479,6 @@ export default function Dashboard() {
                     ))}
                   </TableBody>
                 </Table>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}> 
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      mb: 2, 
-                      color: theme.palette.text.primary,
-                      fontWeight: 500
-                    }}
-                  >
-                    Top Tenants
-                  </Typography>
-                </Box>
               </TableContainer>
             </Box>
           </Paper>

@@ -25,6 +25,7 @@ import {
     TablePagination,
     TableRow,
     Typography,
+    useMediaQuery,
     useTheme
 } from '@mui/material';
 import dayjs from 'dayjs';
@@ -176,9 +177,66 @@ const TablePaginationActions: React.FC<TablePaginationActionsProps> = ({
   );
 };
 
+// CSV Export Function
+const exportToCSV = (logs: AuditLog[]) => {
+  // Convert React nodes to plain text for description
+  const processDescription = (desc: React.ReactNode): string => {
+    if (typeof desc === 'string') return desc;
+    if (!desc || typeof desc !== 'object') return '';
+
+    // Handle array of nodes
+    if (Array.isArray(desc)) {
+      return desc.map(node => processDescription(node)).join('');
+    }
+
+    // Handle React element
+    const element = desc as React.ReactElement<{ children?: React.ReactNode }>;
+    if (element.props?.children) {
+      if (Array.isArray(element.props.children)) {
+        return element.props.children.map(processDescription).join('');
+      }
+      return processDescription(element.props.children);
+    }
+
+    return '';
+  };
+
+  // Prepare CSV data
+  const headers = ['Time', 'Description', 'Event', 'Category', 'Performed By'];
+  
+  const csvData = logs.map(log => {
+    const description = processDescription(log.description).replace(/"/g, '""');
+    return [
+      log.time,
+      description,
+      log.event,
+      log.category,
+      log.performedBy
+    ].map(value => `"${value}"`).join(',');
+  });
+
+  // Create CSV content with proper line breaks
+  const csvContent = [headers.join(','), ...csvData].join('\\n');
+
+  // Create and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const timestamp = dayjs().format('YYYY-MM-DD_HH-mm');
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', `audit_trail_${timestamp}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 // Main Component
 export default function AuditTrail() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'lg'));
 
   // States
   const [filters, setFilters] = useState({
@@ -259,136 +317,287 @@ export default function AuditTrail() {
 
   // Render
   return (
-    <Box sx={{ display: 'flex', bgcolor: '#0d1421', minHeight: '100vh', p: 3 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      bgcolor: '#0d1421', 
+      minHeight: '100vh'
+    }}>
       <AppBarComponent />
       <DrawerComponent />
-      <Box sx={{ width: '100%' }}>
+      
+      {/* Main Content */}
+      <Box 
+        component="main"
+        sx={{ 
+          flexGrow: 1,
+          p: { xs: 1, sm: 2, md: 3 },
+          marginTop: '64px',
+          width: '100%',
+          maxWidth: '100%',
+          overflow: 'hidden'
+        }}
+      >
         {/* Header */}
         <Box sx={{ 
           display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: 'space-between', 
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: 2,
           mb: 3
         }}>
-          <Typography variant="h4" color="white" fontWeight="bold">
+          <Typography 
+            variant={isMobile ? "h5" : "h4"} 
+            color="white" 
+            fontWeight="bold"
+          >
             Audit Trail
           </Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<DownloadIcon />}
-            sx={{ 
-              color: 'white', 
-              borderColor: 'rgba(255,255,255,0.3)',
-              '&:hover': {
-                borderColor: 'white',
-                backgroundColor: 'rgba(255,255,255,0.1)'
-              }
-            }}
-          >
-            Download log
-          </Button>
         </Box>
 
-        {/* Main Content */}
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Filters */}
-          <Filters
-            selectedCategory={filters.category}
-            selectedActions={filters.actions}
-            searchUser={filters.user}
-            fromDate={filters.fromDate}
-            toDate={filters.toDate}
-            onCategoryChange={(category) => setFilters(prev => ({ ...prev, category }))}
-            onActionChange={handleActionChange}
-            onSearchUserChange={(user) => setFilters(prev => ({ ...prev, user }))}
-            onFromDateChange={(date) => setFilters(prev => ({ ...prev, fromDate: date }))}
-            onToDateChange={(date) => setFilters(prev => ({ ...prev, toDate: date }))}
-            onClearFilters={handleClearFilters}
-          />
-
-          {/* Table */}
-          <Paper sx={{ 
-            flexGrow: 1, 
-            bgcolor: '#1a2332', 
-            color: 'white',
-            borderRadius: '8px',
-            overflow: 'hidden'
-          }}>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-                    <TableCell width="40px" sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}></TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Time</TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Description</TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Event</TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Category</TableCell>
-                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Performed By</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {paginatedLogs.map((log) => (
-                    <TableRow
-                      key={log.id}
-                      sx={{ 
-                        '&:nth-of-type(odd)': { backgroundColor: '#183b65' },
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
-                      }}
-                    >
-                      <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', p: 1 }}>
-                        <IconButton 
-                          size="small" 
-                          onClick={() => toggleRowExpansion(log.id)}
-                          sx={{ color: 'white' }}
-                        >
-                          <ExpandIcon
-                            sx={{
-                              transform: expandedRows[log.id] ? 'rotate(180deg)' : 'rotate(0)',
-                              transition: 'transform 0.3s'
-                            }}
-                          />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{log.time}</TableCell>
-                      <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{log.description}</TableCell>
-                      <TableCell sx={{ 
-                        color: 'white', 
-                        borderBottom: '1px solid rgba(255,255,255,0.1)',
-                        '& span': {
-                          bgcolor: EVENT_COLORS[log.event],
-                          px: 2,
-                          py: 0.5,
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 'bold',
-                          textTransform: 'uppercase'
-                        }
-                      }}>
-                        <span>{log.event}</span>
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{log.category}</TableCell>
-                      <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{log.performedBy}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={filteredLogs.length}
-              rowsPerPage={pagination.rowsPerPage}
-              page={pagination.page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              ActionsComponent={TablePaginationActions}
-              sx={{
-                color: 'white',
-                '.MuiTablePagination-select': { color: 'white' },
-                '.MuiTablePagination-selectIcon': { color: 'white' },
-              }}
+        {/* Content Layout */}
+        <Box sx={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3
+        }}>
+          {/* Filters Section */}
+          <Box sx={{ width: '100%' }}>
+            <Filters
+              selectedCategory={filters.category}
+              selectedActions={filters.actions}
+              searchUser={filters.user}
+              fromDate={filters.fromDate}
+              toDate={filters.toDate}
+              onCategoryChange={(category) => setFilters(prev => ({ ...prev, category }))}
+              onActionChange={handleActionChange}
+              onSearchUserChange={(user) => setFilters(prev => ({ ...prev, user }))}
+              onFromDateChange={(date) => setFilters(prev => ({ ...prev, fromDate: date }))}
+              onToDateChange={(date) => setFilters(prev => ({ ...prev, toDate: date }))}
+              onClearFilters={handleClearFilters}
             />
-          </Paper>
+          </Box>
+
+          {/* Table Section */}
+          <Box sx={{ width: '100%' }}>
+            {/* Table Actions */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end',
+              mb: 2 
+            }}>
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={() => exportToCSV(filteredLogs)}
+                sx={{
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                Download Log
+              </Button>
+            </Box>
+
+            {/* Table */}
+            <Paper sx={{ 
+              bgcolor: '#1a2332', 
+              color: 'white',
+              borderRadius: '8px',
+              overflow: 'hidden'
+            }}>
+              <TableContainer sx={{ 
+                maxWidth: '100%',
+                overflowX: 'auto'
+              }}>
+                <Table sx={{ minWidth: isMobile ? 'auto' : 650 }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                      <TableCell width="40px" sx={{ 
+                        color: 'rgba(255,255,255,0.7)', 
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                        padding: { xs: 1, sm: 2 }
+                      }}></TableCell>
+                      {!isMobile && (
+                        <TableCell sx={{ 
+                          color: 'rgba(255,255,255,0.7)', 
+                          borderBottom: '1px solid rgba(255,255,255,0.1)',
+                          padding: { xs: 1, sm: 2 },
+                          minWidth: 100
+                        }}>Time</TableCell>
+                      )}
+                      <TableCell sx={{ 
+                        color: 'rgba(255,255,255,0.7)', 
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                        padding: { xs: 1, sm: 2 },
+                        minWidth: { xs: 150, sm: 200 }
+                      }}>Description</TableCell>
+                      <TableCell sx={{ 
+                        color: 'rgba(255,255,255,0.7)', 
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                        padding: { xs: 1, sm: 2 },
+                        minWidth: 90
+                      }}>Event</TableCell>
+                      {!isMobile && (
+                        <>
+                          <TableCell sx={{ 
+                            color: 'rgba(255,255,255,0.7)', 
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            padding: { xs: 1, sm: 2 },
+                            minWidth: 100
+                          }}>Category</TableCell>
+                          <TableCell sx={{ 
+                            color: 'rgba(255,255,255,0.7)', 
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            padding: { xs: 1, sm: 2 },
+                            minWidth: 120
+                          }}>Performed By</TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedLogs.map((log) => (
+                      <React.Fragment key={log.id}>
+                        <TableRow
+                          sx={{ 
+                            '&:nth-of-type(odd)': { backgroundColor: '#183b65' },
+                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.05)' },
+                          }}
+                        >
+                          <TableCell sx={{ 
+                            borderBottom: '1px solid rgba(255,255,255,0.1)', 
+                            padding: { xs: 1, sm: 2 }
+                          }}>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => toggleRowExpansion(log.id)}
+                              sx={{ color: 'white' }}
+                            >
+                              <ExpandIcon
+                                sx={{
+                                  transform: expandedRows[log.id] ? 'rotate(180deg)' : 'rotate(0)',
+                                  transition: 'transform 0.3s'
+                                }}
+                              />
+                            </IconButton>
+                          </TableCell>
+                          {!isMobile && (
+                            <TableCell sx={{ 
+                              color: 'white', 
+                              borderBottom: '1px solid rgba(255,255,255,0.1)',
+                              padding: { xs: 1, sm: 2 }
+                            }}>{log.time}</TableCell>
+                          )}
+                          <TableCell sx={{ 
+                            color: 'white', 
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            padding: { xs: 1, sm: 2 },
+                            wordBreak: 'break-word'
+                          }}>{log.description}</TableCell>
+                          <TableCell sx={{ 
+                            color: 'white', 
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            padding: { xs: 1, sm: 2 },
+                            '& span': {
+                              bgcolor: EVENT_COLORS[log.event],
+                              px: { xs: 1, sm: 2 },
+                              py: 0.5,
+                              borderRadius: '4px',
+                              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                              whiteSpace: 'nowrap',
+                              display: 'inline-block'
+                            }
+                          }}>
+                            <span>{log.event}</span>
+                          </TableCell>
+                          {!isMobile && (
+                            <>
+                              <TableCell sx={{ 
+                                color: 'white', 
+                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                padding: { xs: 1, sm: 2 }
+                              }}>{log.category}</TableCell>
+                              <TableCell sx={{ 
+                                color: 'white', 
+                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                padding: { xs: 1, sm: 2 }
+                              }}>{log.performedBy}</TableCell>
+                            </>
+                          )}
+                        </TableRow>
+                        {/* Mobile Expanded Row */}
+                        {isMobile && expandedRows[log.id] && (
+                          <TableRow
+                            sx={{ 
+                              backgroundColor: '#183b65',
+                            }}
+                          >
+                            <TableCell 
+                              colSpan={4}
+                              sx={{ 
+                                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                                padding: 2
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                <Box>
+                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                    Time
+                                  </Typography>
+                                  <Typography color="white">
+                                    {log.time}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                    Category
+                                  </Typography>
+                                  <Typography color="white">
+                                    {log.category}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                                    Performed By
+                                  </Typography>
+                                  <Typography color="white">
+                                    {log.performedBy}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={filteredLogs.length}
+                rowsPerPage={pagination.rowsPerPage}
+                page={pagination.page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                ActionsComponent={TablePaginationActions}
+                sx={{
+                  color: 'white',
+                  '.MuiTablePagination-select': { color: 'white' },
+                  '.MuiTablePagination-selectIcon': { color: 'white' },
+                  padding: { xs: 1, sm: 2 }
+                }}
+              />
+            </Paper>
+          </Box>
         </Box>
       </Box>
     </Box>

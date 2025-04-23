@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 // Initialize EmailJS with your public key
-emailjs.init("HE590tv6aI7jkUCn6"); // Replace with your actual public key
+emailjs.init(process.env.EMAILJS_PUBLIC_KEY || ''); // Replace with your actual public key
 
 export default function ForgotPasswordPage() {
   const [formData, setFormData] = useState({
@@ -72,15 +72,15 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         // Send email using EmailJS
         await emailjs.send(
-          "service_gn1rjo8",
-          "template_hbapyxs",
+          process.env.EMAILJS_SERVICE_ID || '',
+          process.env.EMAILJS_TEMPLATE_ID || '',
           {
             link: result.data?.resetUrl || '',
             email: user.email,
             to_name: user.username,
             from_name: "FutureKonnect"
           },
-          'HE590tv6aI7jkUCn6'  // Public key
+          process.env.EMAILJS_PUBLIC_KEY || ''
         );
 
         setMessageType('success');
