@@ -2,12 +2,12 @@
 
 import { Suspense } from 'react';
 import Loader from '../common/Loader';
-import ResetPasswordPage from './ResetPassword';
+import ResetPasswordClient from './ResetPasswordClient';
 
 export default function ResetPasswordWrapper() {
   return (
     <Suspense fallback={<Loader />}>
-      <ResetPasswordPage />
+      <ResetPasswordClient />
     </Suspense>
   );
 } 
