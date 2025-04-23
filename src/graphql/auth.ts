@@ -27,3 +27,25 @@ export const SIGNUP_USER = gql`
     }
   }
 `;
+
+export const REQUEST_PASSWORD_RESET = gql`
+  query RequestReset($email: String!, $username: String!) {
+    Users(where: { email: { _eq: $email }, username: { _eq: $username } }) {
+      id
+      email
+      username
+    }
+  }
+`;
+
+export const UPDATE_PASSWORD = gql`
+  mutation UpdatePassword($userId: uuid!, $newPassword: String!) {
+    update_Users_by_pk(
+      pk_columns: { id: $userId }
+      _set: { password: $newPassword }
+    ) {
+      id
+      email
+    }
+  }
+`;

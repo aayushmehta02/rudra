@@ -21,7 +21,7 @@ export default function LoginForm() {
   const [error, setError] = useState('');
 
   const [loginUser, { loading }] = useLazyQuery(LOGIN_USER, {
-    fetchPolicy: 'no-cache' // Important: Don't cache login results
+    fetchPolicy: 'no-cache'
   });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -46,7 +46,7 @@ export default function LoginForm() {
       const user = data.Users[0];
       
       try {
-        // Verify the password
+       
         const isValidPassword = await bcrypt.compare(password, user.password);
         
         if (!isValidPassword) {
@@ -54,7 +54,7 @@ export default function LoginForm() {
           return;
         }
 
-        // Store user info in localStorage (never store passwords)
+       
         const userToStore = {
           id: user.id,
           username: user.username,
@@ -64,7 +64,7 @@ export default function LoginForm() {
         localStorage.setItem('user', JSON.stringify(userToStore));
         localStorage.setItem('token', user.id);
 
-        // Use Next.js router for navigation
+        
         router.push('/home');
       } catch (bcryptError) {
         console.error('Password verification error:', bcryptError);
@@ -74,6 +74,10 @@ export default function LoginForm() {
       console.error('Login error:', err);
       setError('Login failed. Please try again.');
     }
+  };
+
+  const handleResetPassword = () => {
+    router.push('/reset-password');
   };
 
   return (
@@ -147,14 +151,17 @@ export default function LoginForm() {
           />
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-       
             <Link 
               href="/forgot-password" 
               style={{ 
                 color: '#0ab4ff', 
-                textDecoration: 'none'
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                marginTop: '8px',
+                marginBottom: '8px',
+                transition: 'all 0.2s ease-in-out'
               }}
-              className="hover:underline"
+              className="hover:text-[#0899db]"
             >
               Forgot Password?
             </Link>
