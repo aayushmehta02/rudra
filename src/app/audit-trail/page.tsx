@@ -9,15 +9,15 @@ import { GET_AUDIT_LOGS } from '@/graphql/getData';
 import { useSnackbar } from '@/providers/SnackbarProvider';
 import { useQuery } from '@apollo/client';
 import {
-    FileDownload as DownloadIcon,
-    ExpandMore as ExpandIcon
+  FileDownload as DownloadIcon,
+  ExpandMore as ExpandIcon
 } from '@mui/icons-material';
 import {
-    Box,
-    Button,
-    Typography,
-    useMediaQuery,
-    useTheme
+  Box,
+  Button,
+  Typography,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';

@@ -14,7 +14,7 @@ export function Background() {
         width: '100vw',
         height: '100vh',
         zIndex: -1,
-        background: '#111827',
+        background: 'theme.palette.background.default',
         overflow: 'hidden',
         '&::before, &::after': {
           content: '""',
